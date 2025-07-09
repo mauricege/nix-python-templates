@@ -1,0 +1,157 @@
+{% extends pathjoin("includes", "_README.md.jinja") %}
+
+{% block description %}
+This folder contains a nix flake that exposes an FHS-compatible development shell that should behave just like a (boring) normal linux system. It still provides some nix features, like reproducibility and declarative isolated package management, but it is not as powerful as the [devenv](https://devenv.sh/) template.
+{% endblock %}
+
+{% block features %}
+- Get's nix (mostly) out of your way
+- {%- if python_package_manager == 'uv' %}Fast{% endif %} Python dependency management via `{{ python_package_manager }}`{%- if python_package_manager == 'uv' or python_package_manager == 'pixi' %} and `pyproject.toml`/`{{ python_package_manager }}.lock`{% endif %}
+- System packages can be installed by adding them to `targetPkgs` in `flake.nix`
+{% endblock %}
+
+{% block getting_started %}
+1. **Install [Nix](https://nixos.org/download.html)**
+2. Enter the shell by running (from this directory):
+
+    ```sh
+    nix develop
+    ```
+
+    You can also activate the shell from another directory by running:
+
+    ```sh
+    nix develop {{ _copier_conf.dst_path.as_posix() }}
+    ```
+
+If you want to manage multiple python environments, consult your package manager's ({{ python_package_manager }}) documentation. You will always need to activate the nix environment first, then you can use the package manager to create and activate virtual environments.
+{% endblock %}
+
+{% block extending_environment %}
+### Add System Packages
+
+Edit `flake.nix` and add packages to the `targetPkgs` list of the `buildFHSEnv` function:
+
+```nix
+  ...
+  fhsEnv = pkgs.buildFHSEnv (pkgs.appimageTools.defaultFhsEnvArgs
+    // {
+        name = "{{ project_name }}-fhs";
+        targetPkgs = pkgs: (with pkgs; [
+        {{ python_package_manager }}
+
+        # makes shell more pleasant to use
+        fzf
+        zoxide
+
+        {%- if codeserver %}
+        # code server inside fhs
+        openvscode-server
+        {%- endif %}
+
+        # shells
+        {{ shell }}
+        # add more packages here
+        ]);
+        profile = ...
+        ...
+```
+
+You can use [NixOS search](https://search.nixos.org/packages) to find packages (or the CLI `nix-search`). Just copy the package name and add it to the `targetPkgs` list.
+{% endblock %}
+
+{% block reusing_environment %}
+You can reuse this environment from any directory by running:
+
+```sh
+    nix develop {{ _copier_conf.dst_path.as_posix() }}
+```
+
+If you want to do this from a script, you can use the shebang line:
+
+```sh
+    #!/usr/bin/env -S nix run {{ _copier_conf.dst_path.as_posix() }}# --
+```
+
+See also the examples for [slurm jobs](gpujob.sh) and [scripts](script.sh) in this directory.
+{% endblock %}
+
+{% block installing_flash_attention %}
+{%- if python_package_manager == 'uv' %}
+{%- if install_flash_attention %}
+flash-attention should already be installed in your environment via {{ python_package_manager }}! If it is not, you can follow the instructions below to install it manually.
+{%- endif%}
+It's probably best to just update your template and agree to install flash-attention:
+
+```sh
+    copier update
+```
+
+If you insist on doing it manually, here are the steps:
+1. **Add dependencies to `pyproject.toml`**  
+    Your `pyproject.toml` should include:
+
+    ```toml
+    [project]
+    dependencies = [
+        ...
+    ]
+
+    [project.optional-dependencies]
+    build = ["torch~=2.6.0", "setuptools", "packaging", "psutil", "numpy"]
+    compile = ["flash-attn~=2.7.4"]
+
+    [tool.uv]
+    no-build-isolation-package = ["flash-attn"]
+
+    [[tool.uv.dependency-metadata]]
+    name = "flash-attn"
+    requires-dist = ["torch", "einops", "psutil", "numpy"]
+    ```
+
+    - The `build` group includes `torch` and related build tools.
+    - The `compile` group includes `flash-attn`.
+
+2. **Run two uv sync commands**
+    You need to run two `uv sync` commands to ensure that the `build` and `compile` groups are installed in the correct order:
+
+    ```sh
+    uv sync --extra build
+    uv sync --extra build --extra compile
+    ```
+
+{%- elif python_package_manager == 'pip' %}
+Install torch and then flash-attn without build isolation:
+
+```sh
+    pip install torch==2.6.0+cu124
+    pip install flash-attn --no-build-isolation
+```
+
+{%- elif python_package_manager == 'poetry' %}
+{%- elif python_package_manager == 'pixi' %}
+Just run:
+
+```sh
+    pixi add flash-attn
+```
+
+{%- elif python_package_manager == 'micromamba' %}
+Just run:
+
+```sh
+    micromamba install flash-attn
+```
+
+{%- endif%}
+{% endblock %}
+
+{% block resources %}
+- [blog post on FHSEnvs for python](https://lavafroth.is-a.dev/post/cuda-on-nixos-without-sacrificing-ones-sanity/)
+{%- if python_package_manager == 'uv' %}
+- [uv documentation](https://docs.astral.sh/uv/)
+{%- elif python_package_manager == 'pixi' %}
+- [pixi documentation](https://pixi.sh/)
+{%- endif %}
+- [flash-attn via uv](https://docs.astral.sh/uv/concepts/projects/config/#build-isolation)
+{% endblock %}

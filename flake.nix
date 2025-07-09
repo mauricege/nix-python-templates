@@ -37,6 +37,28 @@
             copier
           ];
         };
+        packages.python-env = pkgs.writeShellApplication {
+          name = "python-env";
+          runtimeInputs = [pkgs.copier];
+          text = ''
+            # set -euo pipefail
+
+            if [ $# -ne 1 ]; then
+              echo "Usage: python-env <destination-directory>"
+              exit 1
+            fi
+
+            TEMPLATE_DIR=${self}
+            DEST_DIR=$(realpath "$1")
+
+            # Create a writable temp copy
+            TMP_TEMPLATE=$(mktemp -d)
+            cp -r "$TEMPLATE_DIR/." "$TMP_TEMPLATE"
+            chmod -R u+w "$TMP_TEMPLATE"
+
+            copier copy "$TMP_TEMPLATE" "$DEST_DIR"
+          '';
+        };
       };
     };
 }

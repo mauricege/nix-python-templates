@@ -1,0 +1,14 @@
+# shellcheck disable=SC2148
+export DIRENV_WARN_TIMEOUT=20s
+
+eval "$(devenv direnvrc)"
+
+direnv_layout_dir() {
+    echo "$PWD/.direnv/$(hostname)"
+}
+
+{%- if python_package_manager == 'uv' %}
+watch_file uv.lock
+{%- endif %}
+
+use devenv

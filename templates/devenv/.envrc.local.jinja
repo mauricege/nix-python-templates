@@ -1,0 +1,4 @@
+# shellcheck disable=SC2148
+export DIRENV_WARN_TIMEOUT=20s
+
+source_env_if_exists {{ _copier_conf.dst_path.as_posix () }}/.envrc

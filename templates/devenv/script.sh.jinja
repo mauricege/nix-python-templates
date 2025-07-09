@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+# This activates the environment (given .envrc is in the current directory)
+# If you do not want to have the .envrc in your current directory, use this snippet
+# pushd $(pwd)
+# cd {{ _copier_conf.dst_path.as_posix() }}
+# direnv allow . && eval "$(direnv export bash)"
+# popd
+direnv allow . && eval "$(direnv export bash)"
+
+python --version

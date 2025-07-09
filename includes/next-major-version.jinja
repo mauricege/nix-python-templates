@@ -1,0 +1,7 @@
+{% macro next_major_version(version_str) -%}
+    {#- Split version into components, fill in missing parts -#}
+    {%- set parts = version_str.split('.') -%}
+    {%- set major = (parts[0] | int) -%}
+    {%- set next_major = major + 1 -%}
+{{ next_major }}.0.0
+{%- endmacro %}

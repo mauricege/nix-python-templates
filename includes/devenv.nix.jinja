@@ -1,0 +1,166 @@
+{
+  pkgs,
+  lib,
+  config,
+  inputs,
+  ...
+}: let
+  {%- if python_package_manager == 'uv' %}
+  # UV works best with hardlinks to its cache, so we try to find a cache directory on the same filesystem as the virtual environment.
+  findUvCacheDir = ''
+    MOUNT_POINT=$(${pkgs.coreutils}/bin/df -P "${config.env.DEVENV_STATE}/venv" | tail -1 | ${pkgs.gawk}/bin/awk '{print $6}')
+    # set the cache directory for uv to be on the same filesystem as the current working directory
+    # This makes sure that cache files are hardlinked to the virtual environment and not copied
+
+    # Try a shared cache directory first
+    if [ -d "$MOUNT_POINT/.cache" ] && [ -w "$MOUNT_POINT/.cache" ]; then
+      UV_CACHE_DIR="$MOUNT_POINT/.cache/uv"
+    # Fallback to user-specific cache directory
+    elif [ -d "$MOUNT_POINT/$USER/.cache" ] && [ -w "$MOUNT_POINT/$USER/.cache" ]; then
+      UV_CACHE_DIR="$MOUNT_POINT/$USER/.cache/uv"
+    fi
+    export UV_CACHE_DIR
+  '';
+  {%- endif %}
+  # Selects the CUDA toolkit version 12.4 from the available CUDA packages in Nixpkgs.
+  # The `cudaPackages` attribute provides access to the full suite of CUDA tools and libraries for this version.
+  # To use a different CUDA version, replace `cudaPackages_12_3` with another version (e.g., `cudaPackages_11_8`).
+  # Individual components (such as `cuda`, `cudatoolkit`, `cudnn`, etc.) can be accessed as attributes of `cudaPackages`
+  # and added to the `packages` list in your devenv shell as needed.
+  # Example: `cudaPackages.cudatoolkit`, `cudaPackages.cudnn`, etc.
+  {%- if install_flash_attention %}
+  cudaPackages = pkgs.cudaPackages_12_4;
+  {%- else %}
+  # cudaPackages = pkgs.cudaPackages_12_4;
+  {%- endif %}
+in {
+  name = "{{ project_name | replace('_', '-')}}";
+  # https://devenv.sh/basics/
+  env = {
+    GREET = "";
+    {%- if python_package_manager == 'uv' %}
+    UV_PROJECT = config.devenv.root;
+    UV_PYTHON = lib.mkForce ""; # Needed temporarily because https://github.com/cachix/devenv/pull/1959 breaks python wrapping for uv
+    {%- endif%}
+  };
+
+  # https://devenv.sh/scripts/
+  scripts = {
+    
+    reinstall-venv = {
+        exec = "rm -rf $DEVENV_ROOT/.venv $DEVENV_ROOT/.direnv $DEVENV_ROOT/.devenv && direnv reload";
+        description = "Wipe the current environment state and reinstall.";
+    };
+
+    env-update = {
+      description = "Update this environment from the newest upstream version.";
+      exec = "copier update --defaults -T --trust";
+    };
+
+    show = {
+      # Prints scripts and descriptions
+      # Adapted from https://github.com/cachix/devenv/blob/ef61728d91ad5eb91f86cdbcc16070602e7afa16/examples/scripts/devenv.nix#L34
+      exec = ''
+        echo
+        echo  Helper scripts for your environment:
+        echo
+        ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|❄️ |' -e 's|••| |g'
+        ${lib.generators.toKeyValue { } (lib.mapAttrs (name: value: value.description) config.scripts)}
+        EOF
+        echo
+      '';
+      description = "Print this message and exit.";
+    };
+
+  };
+
+  # https://devenv.sh/packages/
+  packages = with pkgs; [
+    copier
+    {%- if install_flash_attention %}
+    cudaPackages.cuda_nvcc
+    {%- endif %}
+  ];
+
+  languages = {
+    python = {
+      enable = true;
+      version = "{{ python_version }}";
+      manylinux.enable = false;
+      libraries = with pkgs; [
+        zlib
+      ];
+      venv.enable = true;
+      {%- if python_package_manager == 'uv' %}
+      uv = {
+        enable = true;
+      {%- if declarative_python_environment %}
+        sync = {
+          enable = true;
+        {%- if install_flash_attention %}
+          extras = [ "flash_attention_build" ];
+        {%- endif %}
+        };
+      {%- endif %}
+      };
+      {%- endif %}
+    };
+  };
+
+  enterShell = ''
+    show
+    {%- if not i_know_what_i_am_doing %}
+    # Just remove the line below if you don't want to see the cow
+    ${pkgs.cowsay}/bin/cowsay "If you have any questions about installing packages, please check the _README.md file in this directory! (Also if you want to get rid of the cow ;P)" | ${pkgs.lolcat}/bin/lolcat 2> /dev/null
+    {%- endif %}
+  '';
+
+
+  # https://devenv.sh/git-hooks/
+  git-hooks.hooks = {
+    alejandra.enable = true;
+    check-merge-conflicts.enable = true;
+    ripsecrets.enable = true;
+    ruff-format.enable = true;
+    ruff.enable = true;
+    shellcheck.enable = true;
+  };
+
+  # https://devenv.sh/tasks/
+  tasks = {
+  {%- if python_package_manager == 'uv' %}
+    "devenv:python:uv-lock" = {
+      description = "Create uv lock if it does not exist.";
+      exec = "if [ ! -f ${config.devenv.root}/uv.lock ]; then uv lock; fi";
+      before = ["devenv:python:uv"];
+    };
+    "devenv:python:set-uv-cache" = {
+      description = "Find UV cache on same filesystem.";
+      exec = findUvCacheDir;
+      exports = ["UV_CACHE_DIR"];
+      before = ["devenv:python:uv"];
+    };
+  {%- endif%}
+  {%- if install_flash_attention %}
+    "devenv:python:install-flash-attn" = {
+      description = "Install Flash Attention";
+      exec = "uv sync --extra flash_attention_build --extra flash_attention_compile";
+      after = ["devenv:python:uv"];
+    };
+  {%- endif %}
+  };
+
+  # We have podman installed, so we need to adapt the container copy args to use the podman socket.
+  containers.shell.defaultCopyArgs = [
+    "--dest-daemon-host=unix:///run/user/1000/podman/podman.sock"
+  ];
+
+  # Make diffs fantastic
+  difftastic.enable = true;
+
+  # https://devenv.sh/integrations/dotenv/
+  dotenv.enable = true;
+
+  # https://devenv.sh/integrations/codespaces-devcontainer/
+  devcontainer.enable = true;
+}

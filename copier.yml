@@ -1,0 +1,144 @@
+project_name:
+  type: str
+  help: "Name of the environment:"
+  default: "myenv"
+
+isolated_environment:
+  type: bool
+  help: "Do you want to create an isolated per-project environment? (recommended)"
+  default: true
+
+framework:
+  type: str
+  help: "Choose the framework for your develpment environment:"
+  choices:
+    devenv{%- if isolated_environment %} (recommended){%- endif %}: devenv
+    # flox: flox
+    # devbox: devbox
+    fhs{%- if not isolated_environment %} (recommended){%- endif %}: fhs
+  default: "{% if isolated_environment %}devenv{% else %}fhs{% endif %}"
+
+interface:
+  type: str
+  help: "Do you want to use the devenv cli or a flake?"
+  choices:
+    cli: cli
+    flake: flake
+  default: cli
+  when: false
+
+python_version:
+  type: str
+  help: "Python version to use in the development environment:"
+  default: "3.12"
+
+declarative_python_environment:
+  type: bool
+  help: "Do you want to declaratively manage your python (base) environment?"
+  default: true
+
+python_package_manager:
+  type: str
+  help: "Python package manager to use in the development environment:"
+  choices: |
+    uv - declarative + reproducible, can also function as pip replacement: uv
+    {%- if not declarative_python_environment %}
+    pip: pip
+    {%- endif %}
+    {%- if framework == 'fhs' %}
+    {%- if declarative_python_environment %}
+    pixi - declarative + reproducible, multi-language + multi-env: pixi
+    {%- endif %}
+    micromamba - conda drop-in replacement, multi-language + multi-env: micromamba
+    {%- endif %}
+  default: "{%- if framework == 'devenv' %}uv{% else %}pixi{% endif %}"
+
+python_packages:
+  type: str
+  help: "Enter a comma- or space-separated list of required Python packages (e.g., requests, rich, typer){%- if python_package_manager != 'micromamba' and python_package_manager != 'pip' and python_package_manager != 'pixi' %}. If you want to install flash attention, do NOT add it here, but answer yes to the next question.{%- endif %}"
+  when: "{{ declarative_python_environment }}"
+  default: ""
+
+install_flash_attention:
+  type: bool
+  help: "Do you want to install flash attention?"
+  default: false
+  when: "{{ declarative_python_environment and python_package_manager != 'micromamba' and python_package_manager != 'pixi' }}"
+
+shell:
+  type: str
+  help: "Shell to use in the development environment:"
+  choices:
+    bash: bash
+    zsh: zsh
+    fish: fish
+  default: zsh
+  when: "{{ framework == 'fhs' }}"
+
+project_description:
+  type: str
+  help: "Description of the environment:"
+  default: "A development environment using {{ framework }} with {{ python_package_manager }}."
+  when: false
+
+codeserver:
+  type: bool
+  help: "Do you want to install OpenVSCode Server?"
+  default: false
+  when: "{{ framework == 'fhs' }}"
+
+i_know_what_i_am_doing:
+  type: bool
+  help: "I know what I am doing (you probably don't)"
+  choices:
+    not really: false
+    💯 🤪: true
+  default: false
+
+
+_subdirectory: templates/{{ framework }}
+
+_message_before_copy: |
+
+  Answer a quick few questions to hopefully solve your nix+python troubles! 
+
+_message_after_copy: |
+
+  🚀 Environment {{project_name}} created successfully! 🚀
+
+  To get started, follow these steps:
+
+    {%- if framework == 'devenv' %}
+    1. Allow direnv to load your project environment
+
+       $ direnv allow
+    
+    {%- if not i_know_what_i_am_doing %}
+
+    2. Figure out how to get rid of the cow 😜
+    {%- endif %}
+    {%- elif framework == 'fhs' %}
+    1. Enter the environment
+
+       $ nix develop
+    
+    {%- if not i_know_what_i_am_doing %}
+
+    2. Check out the _README.md file for more information on how to use the environment.
+    {%- endif %}
+    {%- endif %}
+
+
+_message_after_update: |
+
+  Environment updated! ✅️
+
+_tasks:
+  - |
+    if ! command -v git >/dev/null 2>&1; then
+      echo "Git is not installed. Skipping git add."
+      exit 0
+    fi
+
+    echo "Staging only newly created (untracked) files..."
+    git ls-files --others --exclude-standard | xargs -r git add

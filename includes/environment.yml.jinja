@@ -1,0 +1,13 @@
+name: {{ project_name }}
+channels:
+  - conda-forge
+  - pytorch
+  - nvidia
+dependencies:
+  - python={{ python_version }}
+  {%- for pkg in python_packages.replace(',', ' ').split() %}
+  - {{ pkg }}
+  {%- endfor %}
+  {%- if install_flash_attention and python_package_manager == 'pixi' %}
+  - flash-attn
+  {%- endif %}

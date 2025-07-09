@@ -1,0 +1,60 @@
+# ✨️{{ project_name }}✨️
+{% block description %}{% endblock %}
+## Features
+{% block features %}{% endblock %}
+## Getting Started
+{% block getting_started %}{% endblock %}
+## Manage Python Dependencies with {{ python_package_manager }}
+{% if (python_package_manager == 'uv' or python_package_manager == 'pixi') and declarative_python_environment %}
+1. Add your dependencies to `pyproject.toml` under the `[project]` section, for example:
+
+    ```toml
+    [project]
+    dependencies = [
+      "requests",
+      "numpy"
+    ]
+    ```
+{%- if python_package_manager == 'pixi' %}
+    Dependencies added under the `[project]` section will be installed from pypi via pixi's uv integration. If you want to install from conda channels, add the dependencies under `[tool.pixi.dependencies]`. 
+{%- endif %}
+
+2. Use `{{ python_package_manager }}` to resolve and lock dependencies:
+
+    ```sh
+    {{ python_package_manager }} lock
+    ```
+
+    This will generate or update `{{ python_package_manager }}.lock`.
+
+3. To install dependencies from the lock file and sync them with the virtual environment:
+
+    ```sh
+    {{ python_package_manager }} {% if python_package_manager == 'uv' %}sync{% else %}install{% endif %}
+    ```
+
+4. To add a new dependency:
+
+    ```sh
+    {{ python_package_manager }} add <package>
+    ```
+
+    This updates both `pyproject.toml` and `{{ python_package_manager }}.lock`.
+{%- if python_package_manager == 'pixi' %}
+    By default, `pixi`will install from conda-channels. If you want to install from pypi, use the `--pypi` flag:
+
+    ```sh
+    pixi add --pypi <package>
+    ```
+{% endif%}
+{% endif %}
+## Extending the Environment
+{% block extending_environment %}{% endblock %}
+## Reusing the environment
+{% block reusing_environment %}{% endblock %}
+## Installing flash-attention
+{% block installing_flash_attention %}{% endblock %}
+## Resources
+{% block resources %}{% endblock %}
+--------------------------------------------------------------------------------------
+{% block additional %}{% endblock %}

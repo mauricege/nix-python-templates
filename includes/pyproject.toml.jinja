@@ -1,0 +1,48 @@
+{%- from pathjoin('includes', 'next-major-version.jinja') import next_major_version %}
+[project]
+name = "{{ project_name }}"
+version = "0.0.1"
+description = "{{ project_description }}"
+requires-python = ">={{ python_version }}, <={{ next_major_version(python_version) }}"
+dependencies = [
+    {%- if python_package_manager != 'pixi' %}
+    {%- for pkg in python_packages.replace(',', ' ').split() %}
+    "{{ pkg }}",
+    {%- endfor %}
+    {%- endif %}
+]
+
+{% if python_package_manager == 'uv' %}
+[tool.uv]
+dev-dependencies = ["ruff"]
+{%- if install_flash_attention %}
+no-build-isolation-package = ["flash-attn"]
+{% endif %}
+
+{%- if install_flash_attention %}
+[[tool.uv.dependency-metadata]]
+name = "flash-attn"
+requires-dist = ["torch", "einops"]
+{%- endif %}
+{%- endif %}
+
+[project.optional-dependencies]
+{%- if install_flash_attention %}
+flash_attention_build = ["torch~=2.6.0", "setuptools", "packaging", "psutil", "numpy"]
+flash_attention_compile = ["flash-attn~=2.7.4"]
+{%- endif %}
+{% if python_package_manager == 'pixi' %}
+[tool.pixi.workspace]
+channels = ["conda-forge", "pytorch", "nvidia"]
+platforms = ["linux-64"]
+
+[tool.pixi.system-requirements]
+cuda = "12.0"
+
+[tool.pixi.dependencies]
+{%- set py_parts = python_version.split('.') %}
+python = "{% if py_parts|length == 2 %}{{ python_version }}.*{% else %}{{ python_version }}{% endif %}"
+{%- for pkg in python_packages.replace(',', ' ').split() %}
+{{ pkg.split('=')[0] }} = "{{ pkg.split('=')[1] if '=' in pkg else '*' }}"
+{%- endfor %}
+{%- endif %}
