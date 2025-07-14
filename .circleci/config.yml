@@ -1,9 +1,14 @@
 version: 2.1
 
-jobs:
-  test-user-namespaces:
+executors:
+  nix-machine:
     machine:
-      image: ubuntu-2204:current  # Full VM with more privileges than docker executor
+      image: ubuntu-2204:current
+    working_directory: ~/repo
+
+jobs:
+  setup:
+    executor: nix-machine
     steps:
       - checkout
 
@@ -14,18 +19,113 @@ jobs:
             . ~/.nix-profile/etc/profile.d/nix.sh
 
       - run:
-          name: Check if unprivileged user namespaces are supported
+          name: Install Copier
           command: |
-            set -e
-            echo "Checking unshare user namespace:"
-            if unshare --user --mount echo "✅ Unprivileged user namespaces work"; then
-              echo "You can run buildFHSUserEnv here."
-            else
-              echo "❌ Unprivileged user namespaces are not available."
-              exit 1
-            fi
+            . ~/.nix-profile/etc/profile.d/nix.sh
+            nix profile install nixpkgs#copier
+
+      - run:
+          name: Generate default answers.yml
+          command: |
+            cat <<EOF > answers.yml
+            codeserver: false
+            cudaSupport: false
+            framework: fhs
+            i_know_what_i_am_doing: false
+            python_package_manager: pixi
+            python_version: "3.11"
+            shell: bash
+            EOF
+
+      - run:
+          name: Run copier to scaffold project
+          command: |
+            . ~/.nix-profile/etc/profile.d/nix.sh
+            copier copy --force --trust --data-file answers.yml . generated/
+
+      - run:
+          name: Generate flake.lock
+          command: |
+            . ~/.nix-profile/etc/profile.d/nix.sh
+            cd generated && nix flake lock
+
+      - persist_to_workspace:
+          root: generated
+          paths:
+            - flake.lock
+
+  test:
+    executor: nix-machine
+    parameters:
+      package_manager: [pixi, micromamba, uv]
+      shell: [zsh]
+      python_version: ["3.10"]
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/repo/generated
+
+      - run:
+          name: Install Nix
+          command: |
+            curl -L https://nixos.org/nix/install | sh
+            . ~/.nix-profile/etc/profile.d/nix.sh
+
+      - run:
+          name: Install Copier
+          command: |
+            . ~/.nix-profile/etc/profile.d/nix.sh
+            nix profile install nixpkgs#copier
+
+      - run:
+          name: Generate answers.yml
+          command: |
+            cat <<EOF > answers.yml
+            codeserver: false
+            cudaSupport: false
+            framework: fhs
+            i_know_what_i_am_doing: false
+            declarative_python_environment: true
+            python_packages: numpy
+            python_package_manager: << parameters.package_manager >>
+            python_version: << parameters.python_version >>
+            shell: << parameters.shell >>
+            EOF
+
+      - run:
+          name: Run Copier
+          command: |
+            . ~/.nix-profile/etc/profile.d/nix.sh
+            copier copy --force --trust --data-file answers.yml . generated/
+
+      - run:
+          name: Use shared flake.lock
+          command: |
+            cp ~/repo/generated/flake.lock generated/
+
+      - run:
+          name: Test with nix develop
+          command: |
+            . ~/.nix-profile/etc/profile.d/nix.sh
+            cd generated && nix run .# -- -c "python -c 'import numpy'"
+
 workflows:
-  test-user-namespaces: # This is the name of the workflow, feel free to change it to better match your workflow.
-    # Inside the workflow, you define the jobs you want to run.
+  version: 2
+  test-template:
+    triggers:
+      - schedule:
+          cron: "0 0 * * 1"
+          filters:
+            branches:
+              only: main
     jobs:
-      - test-user-namespaces
+      - setup
+      - test:
+          matrix:
+            parameters:
+              package_manager: [pixi, micromamba, uv]
+              shell: [zsh]
+              python_version: ["3.10"]
+          requires:
+            - setup
