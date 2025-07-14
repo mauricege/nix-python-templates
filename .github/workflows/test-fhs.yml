@@ -101,5 +101,4 @@ jobs:
       - name: Test with nix develop
         run: |
           cd generated
-          nix develop .#  # This spawns a shell with all dependencies
-          python -c "import numpy as np" || echo "Python numpy import check failed"
+          nix shell .# --command python -c "import numpy as np" || echo "Python numpy import check failed"
