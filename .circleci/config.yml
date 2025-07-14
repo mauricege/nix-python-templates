@@ -3,7 +3,7 @@ version: 2.1
 executors:
   nix-machine:
     machine:
-      image: ubuntu-2204:current
+      image: ubuntu-2204:current  # Full VM with more privileges than docker executor
     working_directory: ~/repo
 
 jobs:
@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Generate default answers.yml
           command: |
-            cat \<<EOF > answers.yml
+            cat <<EOF > answers.yml
             codeserver: false
             cudaSupport: false
             framework: fhs
@@ -89,7 +89,7 @@ jobs:
       - run:
           name: Generate answers.yml
           command: |
-            cat \<<EOF > answers.yml
+            cat <<EOF > answers.yml
             codeserver: false
             cudaSupport: false
             framework: fhs
@@ -121,19 +121,13 @@ jobs:
 workflows:
   version: 2
   test-template:
-    triggers:
-      - schedule:
-          cron: "0 0 * * 1"
-          filters:
-            branches:
-              only: main
     jobs:
       - setup
       - test:
           matrix:
             parameters:
               package_manager: [pixi, micromamba, uv]
-              shell: [zsh]
               python_version: ["3.10"]
+              shell: ["zsh"]
           requires:
             - setup
