@@ -27,15 +27,15 @@ jobs:
         run: |
           case "${{ matrix.variant }}" in
             pixi)
-              cat > answers.yml <<EOF
-              codeserver: false
-              cudaSupport: false
-              framework: fhs
-              i_know_what_i_am_doing: false
-              python_package_manager: pixi
-              python_version: "${{ matrix.python_version }}"
-              shell: zsh
-              EOF
+              cat <<EOF > answers.yml
+codeserver: false
+cudaSupport: false
+framework: fhs
+i_know_what_i_am_doing: false
+python_package_manager: pixi
+python_version: "${{ matrix.python_version }}"
+shell: ${{ matrix.shell }}
+EOF
               ;;
             *)
               echo "Unknown variant"
