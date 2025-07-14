@@ -37,7 +37,7 @@ jobs:
       - run:
           name: Run copier to scaffold project
           command: |
-            copier copy --force --trust --data-file answers.yml . generated/
+            copier copy --force --trust --data-file answers.yml . $PWD/generated/
 
       - run:
           name: Generate flake.lock
@@ -94,7 +94,7 @@ jobs:
       - run:
           name: Run Copier
           command: |
-            copier copy --force --trust --data-file answers.yml . generated/
+            copier copy --force --trust --data-file answers.yml . $PWD/generated/
 
       - run:
           name: Test with nix develop
