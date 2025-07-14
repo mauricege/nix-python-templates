@@ -10,7 +10,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        variant: [pixi, micromamba]
+        package_manager: [pixi, micromamba]
         shell: [zsh, bash, fish]
         python_version: ["3.10", "3.11", "3.12", "3.13"]
 
@@ -25,24 +25,15 @@ jobs:
 
       - name: Generate answers.yml
         run: |
-          case "${{ matrix.variant }}" in
-            pixi)
-              cat <<EOF > answers.yml
-codeserver: false
-cudaSupport: false
-framework: fhs
-i_know_what_i_am_doing: false
-python_package_manager: pixi
-python_version: "${{ matrix.python_version }}"
-shell: ${{ matrix.shell }}
-EOF
-              ;;
-            *)
-              echo "Unknown variant"
-              exit 1
-              ;;
-          esac
-
+            cat <<-EOF > answers.yml
+            codeserver: false
+            cudaSupport: false
+            framework: fhs
+            i_know_what_i_am_doing: false
+            python_package_manager: ${{ package_manager }}
+            python_version: ${{ matrix.python_version }}
+            shell: ${{ matrix.shell }}
+            EOF
       - name: Generate and test from template
         run: |
           copier copy --force --data-file answers.yml . generated/
