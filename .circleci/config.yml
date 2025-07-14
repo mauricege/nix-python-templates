@@ -19,7 +19,7 @@ jobs:
       - run:
           name: Install Copier
           command: |
-            nix profile install nixpkgs#copier
+            nix profile add nixpkgs#copier
 
       - run:
           name: Generate default answers.yml
@@ -74,7 +74,7 @@ jobs:
       - run:
           name: Install Copier
           command: |
-            nix profile install nixpkgs#copier
+            nix profile add nixpkgs#copier
 
       - run:
           name: Generate answers.yml
@@ -95,11 +95,6 @@ jobs:
           name: Run Copier
           command: |
             copier copy --force --trust --data-file answers.yml . generated/
-
-      - run:
-          name: Use shared flake.lock
-          command: |
-            cp ~/repo/generated/flake.lock generated/
 
       - run:
           name: Test with nix develop
