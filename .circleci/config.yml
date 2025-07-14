@@ -24,3 +24,8 @@ jobs:
               echo "❌ Unprivileged user namespaces are not available."
               exit 1
             fi
+workflows:
+  test-user-namespaces: # This is the name of the workflow, feel free to change it to better match your workflow.
+    # Inside the workflow, you define the jobs you want to run.
+    jobs:
+      - test-user-namespaces
