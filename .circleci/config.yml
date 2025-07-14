@@ -117,8 +117,8 @@ commit-lockfile:
       - run:
           name: Commit and push flake.lock
           command: |
-            cp ~/repo/generated/flake.lock path/in/repo/flake.lock
-            git add path/in/repo/flake.lock
+            cp ~/repo/generated/flake.lock templates/fhs/flake.lock.jinja
+            git templates/fhs/flake.lock.jinja
 
             # Only commit if there are changes
             if git diff --cached --quiet; then
