@@ -55,18 +55,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-
-      # Cache Nix store for faster builds
-      - name: Cache Nix store
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.cache/nix
-            /nix/store
-          key: ${{ runner.os }}-nix-${{ hashFiles('**/*.lock') }}
-          restore-keys: |
-            ${{ runner.os }}-nix-
-
+      
       - name: Download shared flake.lock
         uses: actions/download-artifact@v4
         with:
@@ -86,6 +75,7 @@ jobs:
             cudaSupport: false
             framework: fhs
             i_know_what_i_am_doing: false
+            declarative_python_environment
             python_packages: numpy
             python_package_manager: ${{ matrix.package_manager }}
             python_version: ${{ matrix.python_version }}
@@ -101,4 +91,5 @@ jobs:
       - name: Test with nix develop
         run: |
           cd generated
-          nix shell .# --command python -c "import numpy as np" || echo "Python numpy import check failed"
+          nix develop --no-update-lock-file 
+          python -c "import numpy as np" || echo "Python numpy import check failed"
