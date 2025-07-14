@@ -6,16 +6,70 @@ on:
     - cron: '0 0 * * 1'  # every Monday at 00:00 UTC
 
 jobs:
+  setup:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+  
+        - name: Install Nix
+          uses: cachix/install-nix-action@v27
+  
+        - name: Install Copier
+          run: nix profile install nixpkgs#copier
+  
+        - name: Generate default answers.yml
+          run: |
+            cat <<-EOF > answers.yml
+            codeserver: false
+            cudaSupport: false
+            framework: fhs
+            i_know_what_i_am_doing: false
+            python_package_manager: pixi
+            python_version: "3.11"
+            shell: bash
+            EOF
+  
+        - name: Run copier to scaffold project
+          run: copier copy --force --data-file answers.yml . generated/
+  
+        - name: Generate flake.lock
+          working-directory: generated
+          run: nix flake lock
+  
+        - name: Upload flake.lock
+          uses: actions/upload-artifact@v4
+          with:
+            name: flake-lock
+            path: generated/flake.lock
+
   test:
+    needs: setup
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package_manager: [pixi, micromamba]
+        variant: [pixi, micromamba]
         shell: [zsh, bash, fish]
         python_version: ["3.10", "3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
+
+      # Cache Nix store for faster builds
+      - name: Cache Nix store
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cache/nix
+            /nix/store
+          key: ${{ runner.os }}-nix-${{ hashFiles('**/*.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-nix-
+
+      - name: Download shared flake.lock
+        uses: actions/download-artifact@v4
+        with:
+          name: flake-lock
+          path: shared-lock
 
       - name: Install Nix
         uses: cachix/install-nix-action@v27
@@ -34,13 +88,15 @@ jobs:
             python_version: ${{ matrix.python_version }}
             shell: ${{ matrix.shell }}
             EOF
-      - name: Generate and test from template
-        run: |
-          copier copy --force --trust --data-file answers.yml . generated/
+            
+      - name: Run Copier
+        run: copier copy --force --data-file answers.yml . generated/
 
+      - name: Use shared flake.lock
+        run: cp shared-lock/flake.lock generated/
+
+      - name: Test with nix develop
+        run: |
           cd generated
-          if [ -f flake.nix ]; then
-            nix shell .# --command python --version
-          else
-            echo "No flake.nix found. Skipping."
-          fi
+          nix develop .#  # This spawns a shell with all dependencies
+          python --version || echo "Python version check failed"
