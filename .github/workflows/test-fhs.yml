@@ -36,7 +36,7 @@ jobs:
             EOF
       - name: Generate and test from template
         run: |
-          copier copy --force --data-file answers.yml . generated/
+          copier copy --force --trust --data-file answers.yml . generated/
 
           cd generated
           if [ -f flake.nix ]; then
