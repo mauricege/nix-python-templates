@@ -88,10 +88,10 @@ jobs:
       - name: Use shared flake.lock
         run: cp shared-lock/flake.lock generated/
 
+      - name: Nix develop
+        uses: nicknovitski/nix-develop@v1
+
       - name: Test with nix develop
         run: |
-          cd generated
-          git add .
-          nix develop --no-update-lock-file
           echo $(which python)
           python -c "import numpy as np" || echo "Python numpy import check failed"
