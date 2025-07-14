@@ -30,7 +30,7 @@ jobs:
             EOF
   
         - name: Run copier to scaffold project
-          run: copier copy --force --data-file answers.yml . generated/
+          run: copier copy --force --trust --data-file answers.yml . generated/
   
         - name: Generate flake.lock
           working-directory: generated
