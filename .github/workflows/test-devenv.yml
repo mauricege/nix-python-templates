@@ -21,7 +21,7 @@ jobs:
           with:
             name: devenv
         - name: Install devenv
-          run: nix profile add nixpkgs#devenv
+          run: nix profile install nixpkgs#devenv
 
         - name: Install Copier
           run: nix profile install nixpkgs#copier
@@ -60,7 +60,7 @@ jobs:
         with:
           name: devenv
       - name: Install devenv
-        run: nix profile add nixpkgs#devenv
+        run: nix profile install nixpkgs#devenv
 
       - name: Install Copier
         run: nix profile install nixpkgs#copier
