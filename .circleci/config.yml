@@ -56,10 +56,6 @@ jobs:
 
   test:
     executor: nix-machine
-    parameters:
-      package_manager: [pixi, micromamba, uv]
-      shell: [zsh]
-      python_version: ["3.10"]
     steps:
       - checkout
 
