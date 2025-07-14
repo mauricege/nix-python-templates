@@ -87,7 +87,7 @@ jobs:
             declarative_python_environment: true
             python_packages: numpy
             python_package_manager: << parameters.package_manager >>
-            python_version: << parameters.python_version >>
+            python_version: "<< parameters.python_version >>"
             shell: << parameters.shell >>
             EOF
 
