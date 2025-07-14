@@ -37,6 +37,18 @@ jobs:
               python_package_manager: uv
               python_version: "3.10"
               EOF
+        - name: Run Copier
+          run: copier copy --force --trust --data-file answers.yml . generated/
+
+        - name: Test with devenv
+          working-directory: generated
+          run: |
+            devenv shell "python -c 'import numpy' || EXIT 1"
+        - name: Upload devenv.lock
+          uses: actions/upload-artifact@v4
+          with:
+            name: devenv-lock
+            path: generated/devenv.lock
     
 
   test:
@@ -45,7 +57,7 @@ jobs:
     strategy:
       matrix:
         package_manager: [uv]
-        python_version: ["3.10"]
+        python_version: ["3.11", "3.12", "3.13"]
 
     steps:
       - uses: actions/checkout@v4
@@ -80,6 +92,12 @@ jobs:
             
       - name: Run Copier
         run: copier copy --force --trust --data-file answers.yml . generated/
+      
+      - name: Download shared flake.lock
+        uses: actions/download-artifact@v4
+        with:
+          name: flake-lock
+          path: generated
 
       - name: Test with devenv
         working-directory: generated
