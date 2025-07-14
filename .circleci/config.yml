@@ -101,7 +101,7 @@ jobs:
           command: |
             cd generated && nix run .# -- -c "python -c 'import numpy'"
             
-commit-lockfile:
+  commit-lockfile:
     executor: nix-machine
     steps:
       - checkout
