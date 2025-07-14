@@ -56,6 +56,18 @@ jobs:
 
   test:
     executor: nix-machine
+    parameters:
+      package_manager: 
+        type: enum
+        default: pixi
+        enum: [pixi, micromamba, uv]
+      python_version:
+        type: string
+        default: "3.10"
+      shell:
+        type: enum
+        default: zsh
+        enum: [zsh, bash, fish]
     steps:
       - checkout
 
