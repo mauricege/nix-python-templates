@@ -110,7 +110,7 @@ workflows:
           matrix:
             parameters:
               package_manager: [pixi, micromamba, uv]
-              python_version: ["3.10"]
-              shell: ["zsh"]
+              python_version: ["3.10", "3.11", "3.12", "3.13"]
+              shell: ["bash", "zsh", "fish"]
           requires:
             - setup
