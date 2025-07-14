@@ -1,5 +1,8 @@
 version: 2.1
 
+orbs:
+  nix: eld/nix@1.1.1
+
 executors:
   nix-machine:
     machine:
@@ -12,16 +15,10 @@ jobs:
     steps:
       - checkout
 
-      - run:
-          name: Install Nix
-          command: |
-            curl -L https://nixos.org/nix/install | sh
-            . ~/.nix-profile/etc/profile.d/nix.sh
-
+      - nix/install
       - run:
           name: Install Copier
           command: |
-            . ~/.nix-profile/etc/profile.d/nix.sh
             nix profile install nixpkgs#copier
 
       - run:
@@ -40,13 +37,11 @@ jobs:
       - run:
           name: Run copier to scaffold project
           command: |
-            . ~/.nix-profile/etc/profile.d/nix.sh
             copier copy --force --trust --data-file answers.yml . generated/
 
       - run:
           name: Generate flake.lock
           command: |
-            . ~/.nix-profile/etc/profile.d/nix.sh
             cd generated && nix flake lock
 
       - persist_to_workspace:
@@ -74,16 +69,11 @@ jobs:
       - attach_workspace:
           at: ~/repo/generated
 
-      - run:
-          name: Install Nix
-          command: |
-            curl -L https://nixos.org/nix/install | sh
-            . ~/.nix-profile/etc/profile.d/nix.sh
-
+      - nix/install
+      
       - run:
           name: Install Copier
           command: |
-            . ~/.nix-profile/etc/profile.d/nix.sh
             nix profile install nixpkgs#copier
 
       - run:
@@ -104,7 +94,6 @@ jobs:
       - run:
           name: Run Copier
           command: |
-            . ~/.nix-profile/etc/profile.d/nix.sh
             copier copy --force --trust --data-file answers.yml . generated/
 
       - run:
@@ -115,7 +104,6 @@ jobs:
       - run:
           name: Test with nix develop
           command: |
-            . ~/.nix-profile/etc/profile.d/nix.sh
             cd generated && nix run .# -- -c "python -c 'import numpy'"
 
 workflows:
