@@ -1,0 +1,87 @@
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 0 * * 1'  # every Monday at 00:00 UTC
+
+jobs:
+  setup:
+      runs-on: ubuntu-latest
+      steps:
+        - uses: actions/checkout@v4
+  
+        - name: Install Nix
+          uses: cachix/install-nix-action@v30
+          with:
+            extra_nix_config: |
+              access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+        - name: Configure Cachix
+          uses: cachix/cachix-action@v15
+          with:
+            name: devenv
+        - name: Install devenv
+          run: nix profile add nixpkgs#devenv
+
+        - name: Install Copier
+          run: nix profile install nixpkgs#copier
+        - name: Generate answers.yml
+          run: |
+              cat <<-EOF > answers.yml
+              codeserver: false
+              cudaSupport: false
+              framework: devenv
+              i_know_what_i_am_doing: false
+              declarative_python_environment: true
+              python_packages: numpy
+              python_package_manager: uv
+              python_version: "3.10"
+              EOF
+    
+
+  test:
+    needs: setup
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        package_manager: [uv]
+        python_version: ["3.10"]
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Install Nix
+        uses: cachix/install-nix-action@v30
+        with:
+          extra_nix_config: |
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Configure Cachix
+        uses: cachix/cachix-action@v15
+        with:
+          name: devenv
+      - name: Install devenv
+        run: nix profile add nixpkgs#devenv
+
+      - name: Install Copier
+        run: nix profile install nixpkgs#copier
+
+      - name: Generate answers.yml
+        run: |
+            cat <<-EOF > answers.yml
+            codeserver: false
+            cudaSupport: false
+            framework: devenv
+            i_know_what_i_am_doing: false
+            declarative_python_environment: true
+            python_packages: numpy
+            python_package_manager: ${{ matrix.package_manager }}
+            python_version: "${{ matrix.python_version }}"
+            EOF
+            
+      - name: Run Copier
+        run: copier copy --force --trust --data-file answers.yml . generated/
+
+      - name: Test with devenv
+        working-directory: generated
+        run: |
+          devenv shell "python -c 'import numpy' || EXIT 1"
