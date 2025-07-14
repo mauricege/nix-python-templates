@@ -100,6 +100,34 @@ jobs:
           name: Test with nix develop
           command: |
             cd generated && nix run .# -- -c "python -c 'import numpy'"
+            
+commit-lockfile:
+    executor: nix-machine
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/repo/generated
+
+      - run:
+          name: Configure Git
+          command: |
+            git config user.email "circleci@circleci.com"
+            git config user.name "CircleCI"
+
+      - run:
+          name: Commit and push flake.lock
+          command: |
+            cp ~/repo/generated/flake.lock path/in/repo/flake.lock
+            git add path/in/repo/flake.lock
+
+            # Only commit if there are changes
+            if git diff --cached --quiet; then
+              echo "No changes to commit"
+            else
+              git commit -m "Update flake.lock from CI"
+              git push origin $(git rev-parse --abbrev-ref HEAD)
+            fi
+
 
 workflows:
   version: 2
@@ -114,3 +142,6 @@ workflows:
               shell: ["bash", "zsh", "fish"]
           requires:
             - setup
+      - commit-lockfile:
+          requires:
+            - test
