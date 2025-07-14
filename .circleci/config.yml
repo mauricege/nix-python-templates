@@ -27,7 +27,7 @@ jobs:
       - run:
           name: Generate default answers.yml
           command: |
-            cat <<EOF > answers.yml
+            cat \<<EOF > answers.yml
             codeserver: false
             cudaSupport: false
             framework: fhs
@@ -89,7 +89,7 @@ jobs:
       - run:
           name: Generate answers.yml
           command: |
-            cat <<EOF > answers.yml
+            cat \<<EOF > answers.yml
             codeserver: false
             cudaSupport: false
             framework: fhs
