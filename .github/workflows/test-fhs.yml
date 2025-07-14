@@ -13,9 +13,6 @@ jobs:
   
         - name: Install Nix
           uses: DeterminateSystems/nix-installer-action@main
-        - name: Magix nix cache
-          uses: DeterminateSystems/magic-nix-cache-action@main
-  
         - name: Install Copier
           run: nix profile install nixpkgs#copier
   
