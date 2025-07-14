@@ -90,7 +90,7 @@ jobs:
             EOF
             
       - name: Run Copier
-        run: copier copy --force --data-file answers.yml . generated/
+        run: copier copy --force --trust --data-file answers.yml . generated/
 
       - name: Use shared flake.lock
         run: cp shared-lock/flake.lock generated/
