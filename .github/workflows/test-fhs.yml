@@ -12,7 +12,9 @@ jobs:
         - uses: actions/checkout@v4
   
         - name: Install Nix
-          uses: cachix/install-nix-action@v27
+          uses: DeterminateSystems/nix-installer-action@main
+        - name: Magix nix cache
+          uses: DeterminateSystems/magic-nix-cache-action@main
   
         - name: Install Copier
           run: nix profile install nixpkgs#copier
@@ -47,7 +49,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        package_manager: [pixi, micromamba]
+        package_manager: [pixi, micromamba, uv]
         shell: [zsh, bash, fish]
         python_version: ["3.10", "3.11", "3.12", "3.13"]
 
