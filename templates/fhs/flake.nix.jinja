@@ -17,7 +17,7 @@
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
-          cudaSupport = true;
+          cudaSupport = {{ cudaSupport }};
         };
         {%- if declarative_python_environment %}
         {%- if python_package_manager == "micromamba" %}
@@ -61,46 +61,50 @@
         {%- endif %}
         {%- endif %}
         {%- endif %}
-        fhsEnv = pkgs.buildFHSEnv (pkgs.appimageTools.defaultFhsEnvArgs
-          // {
-            name = "{{ project_name }}-fhs";
-            targetPkgs = pkgs: (with pkgs; [
-              {{ python_package_manager }}
-
-              # makes shell more pleasant to use
-              fzf
-              zoxide
-
-              {%- if codeserver %}
-              # code server inside fhs
-              openvscode-server
-              {%- endif %}
-
-              # shells
-              {{ shell }}
-            ]);
-            profile = ''
-              export CUDA_PATH="${pkgs.cudatoolkit}"
-              export EXTRA_CCFLAGS="-I/usr/include"
-              {%- if python_package_manager == 'micromamba' %}
-              export MAMBA_ROOT_PREFIX="''${MAMBA_ROOT_PREFIX:-{{ _copier_conf.dst_path.as_posix() }}/.micromamba}"
-              {%- endif %}
-              {%- if declarative_python_environment %}
-              ${pythonInstall}
-              {%- if shell == "zsh" or shell == "bash" %}
-              ${pythonActivate}
-              {%- endif %}
-              {%- endif %}
-            '';
-            runScript = ''{%- if shell == "fish" %}fish{%- if declarative_python_environment %} -C "${builtins.replaceStrings ["\n"] ["; "] pythonActivate}"{%- endif %}{%- elif shell == "zsh" or shell == "bash" %}{{ shell }}{%- endif %}'';
-          });
       in {
-        devShells.default = fhsEnv.env.overrideAttrs (old: {
-          name = "{{ project_name }}";
-        });
-        apps.default = {
-          type = "app";
-          program = "${fhsEnv}/bin/${fhsEnv.name}";
+        devShells = rec {
+          {{ project_name }} = self.packages.${system}.default.env.overrideAttrs (old: {
+            name = "{{ project_name }}";
+          });
+          default = {{ project_name }};
+        };
+        packages = rec {
+          {{ project_name }}-fhs = pkgs.buildFHSEnv (pkgs.appimageTools.defaultFhsEnvArgs
+            // {
+              name = "{{ project_name }}-fhs";
+              targetPkgs = pkgs: (with pkgs; [
+                {{ python_package_manager }}
+
+                # makes shell more pleasant to use
+                fzf
+                zoxide
+
+                {%- if codeserver %}
+                # code server inside fhs
+                openvscode-server
+                {%- endif %}
+
+                # shells
+                {{ shell }}
+              ]);
+              profile = ''
+                {%- if cudaSupport %}
+                export CUDA_PATH="${pkgs.cudatoolkit}"
+                {%- endif %}
+                export EXTRA_CCFLAGS="-I/usr/include"
+                {%- if python_package_manager == 'micromamba' %}
+                export MAMBA_ROOT_PREFIX="''${MAMBA_ROOT_PREFIX:-{{ _copier_conf.dst_path.as_posix() }}/.micromamba}"
+                {%- endif %}
+                {%- if declarative_python_environment %}
+                ${pythonInstall}
+                {%- if shell == "zsh" or shell == "bash" %}
+                ${pythonActivate}
+                {%- endif %}
+                {%- endif %}
+              '';
+              runScript = ''{%- if shell == "fish" %}fish{%- if declarative_python_environment %} -C "${builtins.replaceStrings ["\n"] ["; "] pythonActivate}"{%- endif %}{%- elif shell == "zsh" or shell == "bash" %}{{ shell }}{%- endif %}'';
+            });
+          default = {{ project_name }}-fhs;
         };
       }
     );

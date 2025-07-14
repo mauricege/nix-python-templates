@@ -1,0 +1,4 @@
+# These contain absolute paths, so we ignore them for privacy reasons.
+_README.md
+gpujob.sh
+script.sh

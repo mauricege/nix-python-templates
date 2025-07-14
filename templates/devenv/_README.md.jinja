@@ -153,15 +153,12 @@ If you insist on doing it manually, here are the steps:
             {%- if python_package_manager == 'uv' %}
             uv = {
                 enable = true;
-            {%- if declarative_python_environment %}
                 sync = {
-                enable = true;
-                {%- if install_flash_attention %}
-                extras = [ "flash_attention_build" ];
-                {%- endif %}
+                    enable = true;
+                    extras = [ "flash_attention_build" ];
                 };
-            {%- endif %}
             };
+            {%- endif %}
         };
     };
     ```

@@ -59,11 +59,16 @@ python_packages:
   when: "{{ declarative_python_environment }}"
   default: ""
 
+cudaSupport:
+  type: bool
+  help: "Do you want to install CUDA support?"
+  default: true
+
 install_flash_attention:
   type: bool
   help: "Do you want to install flash attention?"
   default: false
-  when: "{{ declarative_python_environment and python_package_manager != 'micromamba' and python_package_manager != 'pixi' }}"
+  when: "{{ declarative_python_environment and python_package_manager != 'micromamba' and python_package_manager != 'pixi' and cudaSupport }}"
 
 shell:
   type: str
