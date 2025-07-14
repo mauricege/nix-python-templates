@@ -92,5 +92,5 @@ jobs:
         run: |
           cd generated
           git add flake.lock
-          nix shell --no-update-lock --command echo $(which python)
-          nix shell --no-update-lock --command  python -c "import numpy as np" 2>/dev/null || echo "Python numpy import check failed"
+          nix shell --command echo $(which python)
+          nix shell --command  python -c "import numpy as np" 2>/dev/null || echo "Python numpy import check failed"
