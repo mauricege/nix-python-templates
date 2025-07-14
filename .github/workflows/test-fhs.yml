@@ -84,6 +84,7 @@ jobs:
             cudaSupport: false
             framework: fhs
             i_know_what_i_am_doing: false
+            python_packages: numpy
             python_package_manager: ${{ matrix.package_manager }}
             python_version: ${{ matrix.python_version }}
             shell: ${{ matrix.shell }}
@@ -99,4 +100,4 @@ jobs:
         run: |
           cd generated
           nix develop .#  # This spawns a shell with all dependencies
-          python --version || echo "Python version check failed"
+          python -c "import numpy as np" || echo "Python numpy import check failed"
