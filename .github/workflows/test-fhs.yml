@@ -91,5 +91,6 @@ jobs:
       - name: Test with nix develop
         run: |
           cd generated
-          nix develop --no-update-lock-file 
+          nix develop --no-update-lock-file
+          echo $(which python)
           python -c "import numpy as np" || echo "Python numpy import check failed"
