@@ -85,18 +85,7 @@ jobs:
       - name: Use shared flake.lock
         run: cp shared-lock/flake.lock generated/
 
-      - name: Generate test script
-        working-directory: generated
-        run: |
-            cat <<-EOF > test.sh
-            #!/usr/bin/env -S nix run .# --
-            python --version
-            python -c "import numpy"
-            EOF
-            chmod +x test.sh
-
       - name: Test with nix develop
         working-directory: generated
         run: |
-          git add flake.lock
-          ./test.sh
+          nix run .# -- -c "python -c 'import numpy' || EXIT 1"
