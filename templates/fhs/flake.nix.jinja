@@ -17,7 +17,7 @@
         pkgs = import nixpkgs {
           inherit system;
           config.allowUnfree = true;
-          cudaSupport = {{ cudaSupport }};
+          cudaSupport = {{ cudaSupport|string|lower }};
         };
         {%- if declarative_python_environment %}
         {%- if python_package_manager == "micromamba" %}

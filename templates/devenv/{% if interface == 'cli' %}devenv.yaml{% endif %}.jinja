@@ -12,5 +12,5 @@ inputs:
       nixpkgs:
         follows: nixpkgs
 allowUnfree: true
-cudaSupport: {{ cudaSupport }}
+cudaSupport: {{ cudaSupport|string|lower }}
 backend: nix
