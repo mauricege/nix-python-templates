@@ -96,7 +96,7 @@ jobs:
       - name: Download shared flake.lock
         uses: actions/download-artifact@v4
         with:
-          name: flake-lock
+          name: devenv-lock
           path: generated
 
       - name: Test with devenv
