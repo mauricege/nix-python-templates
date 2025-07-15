@@ -99,7 +99,7 @@ jobs:
       - run:
           name: Test with nix develop
           command: |
-            cd generated && nix run .# -- -c "python -c 'import numpy'"
+            cd generated && nix run .# -- -c "echo $(which python); python -c 'import numpy'"
             
   commit-lockfile:
     executor: nix-machine
