@@ -103,3 +103,18 @@ jobs:
         working-directory: generated
         run: |
           devenv shell "python -c 'import numpy' || EXIT 1"
+          
+  commit_flake_lock:
+    needs: test  # This makes the job depend on the success of all test jobs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Copy devenv.lock to the main repository
+        run: |
+          cp generated/devenv.lock templates/devenv/devenv.lock.jinja
+          git config --global user.name "GitHub Actions"
+          git config --global user.email "actions@github.com"
+          git add templates/devenv/devenv.lock.jinja
+          git commit -m "Update devenv.lock.jinja"
+          git push

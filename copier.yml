@@ -145,5 +145,9 @@ _tasks:
       exit 0
     fi
 
-    echo "Staging only newly created (untracked) files..."
-    git ls-files --others --exclude-standard | xargs -r git add
+    echo "Staging files..."
+    {%- if framework == 'devenv' %}
+    git add devenv.nix .envrc
+    {%- elif framework == 'fhs' %}
+    git add flake.nix
+    {%- endif %}
