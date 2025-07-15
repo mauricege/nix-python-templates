@@ -1,0 +1,147 @@
+version: 2.1
+
+orbs:
+  nix: eld/nix@1.1.1
+
+executors:
+  nix-machine:
+    machine:
+      image: ubuntu-2204:current  # Full VM with more privileges than docker executor
+    working_directory: ~/repo
+
+jobs:
+  setup:
+    executor: nix-machine
+    steps:
+      - checkout
+
+      - nix/install
+      - run:
+          name: Install Copier
+          command: |
+            nix profile add nixpkgs#copier
+
+      - run:
+          name: Generate default answers.yml
+          command: |
+            cat \<<EOF > answers.yml
+            codeserver: false
+            cudaSupport: false
+            framework: fhs
+            i_know_what_i_am_doing: false
+            python_package_manager: pixi
+            python_version: "3.11"
+            shell: bash
+            EOF
+
+      - run:
+          name: Run copier to scaffold project
+          command: |
+            copier copy --force --trust --data-file answers.yml . $PWD/generated/
+
+      - run:
+          name: Generate flake.lock
+          command: |
+            cd generated && nix flake lock
+
+      - persist_to_workspace:
+          root: generated
+          paths:
+            - flake.lock
+
+  test:
+    executor: nix-machine
+    parameters:
+      package_manager: 
+        type: enum
+        default: pixi
+        enum: [pixi, micromamba, uv]
+      python_version:
+        type: string
+        default: "3.10"
+      shell:
+        type: enum
+        default: zsh
+        enum: [zsh, bash, fish]
+    steps:
+      - checkout
+
+      - attach_workspace:
+          at: ~/repo/generated
+
+      - nix/install
+      
+      - run:
+          name: Install Copier
+          command: |
+            nix profile add nixpkgs#copier
+
+      - run:
+          name: Generate answers.yml
+          command: |
+            cat \<<EOF > answers.yml
+            codeserver: false
+            cudaSupport: false
+            framework: fhs
+            i_know_what_i_am_doing: false
+            declarative_python_environment: true
+            python_packages: numpy
+            python_package_manager: << parameters.package_manager >>
+            python_version: "<< parameters.python_version >>"
+            shell: << parameters.shell >>
+            EOF
+
+      - run:
+          name: Run Copier
+          command: |
+            copier copy --force --trust --data-file answers.yml . $PWD/generated/
+
+      - run:
+          name: Test with nix develop
+          command: |
+            cd generated && nix run .# -- -c "python -c 'import numpy'"
+            
+  commit-lockfile:
+    executor: nix-machine
+    steps:
+      - checkout
+      - attach_workspace:
+          at: ~/repo/generated
+
+      - run:
+          name: Configure Git
+          command: |
+            git config user.email "circleci@circleci.com"
+            git config user.name "CircleCI"
+
+      - run:
+          name: Commit and push flake.lock
+          command: |
+            cp ~/repo/generated/flake.lock templates/fhs/flake.lock.jinja
+            git templates/fhs/flake.lock.jinja
+
+            # Only commit if there are changes
+            if git diff --cached --quiet; then
+              echo "No changes to commit"
+            else
+              git commit -m "Update flake.lock from CI"
+              git push origin $(git rev-parse --abbrev-ref HEAD)
+            fi
+
+
+workflows:
+  version: 2
+  test-template:
+    jobs:
+      - setup
+      - test:
+          matrix:
+            parameters:
+              package_manager: [pixi, micromamba, uv]
+              python_version: ["3.10", "3.11", "3.12", "3.13"]
+              shell: ["bash", "zsh", "fish"]
+          requires:
+            - setup
+      - commit-lockfile:
+          requires:
+            - test
