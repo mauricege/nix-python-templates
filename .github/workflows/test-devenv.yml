@@ -93,7 +93,7 @@ jobs:
       - name: Run Copier
         run: copier copy --force --trust --data-file answers.yml . generated/
       
-      - name: Download shared flake.lock
+      - name: Download shared devenv lock
         uses: actions/download-artifact@v4
         with:
           name: devenv-lock
