@@ -41,15 +41,15 @@ python_package_manager:
   type: str
   help: "Python package manager to use in the development environment:"
   choices: |
-    uv - declarative + reproducible, can also function as pip replacement: uv
+    "uv - declarative + reproducible, can also function as pip replacement": uv
     {%- if not declarative_python_environment %}
-    pip: pip
+    "pip": pip
     {%- endif %}
     {%- if framework == 'fhs' %}
     {%- if declarative_python_environment %}
-    pixi - declarative + reproducible, multi-language + multi-env: pixi
+    "pixi - declarative + reproducible, multi-language + multi-env": pixi
     {%- endif %}
-    micromamba - conda drop-in replacement, multi-language + multi-env: micromamba
+    "micromamba - conda drop-in replacement, multi-language + multi-env": micromamba
     {%- endif %}
   default: "{%- if framework == 'devenv' %}uv{% else %}pixi{% endif %}"
 
