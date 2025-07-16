@@ -100,7 +100,7 @@ jobs:
           command: |
             cd generated
             cat \<<EOF > test.sh
-            #!/usr/bin/env -S nix run .# --
+            #!/usr/bin/env -S nix run --no-update-lock-file .# --
 
             echo "$(which python)"
             python --version
