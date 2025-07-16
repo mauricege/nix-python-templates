@@ -8,10 +8,12 @@ executors:
     machine:
       image: ubuntu-2204:current  # Full VM with more privileges than docker executor
     working_directory: ~/repo
+  default:
+    docker:
 
 jobs:
   setup:
-    executor: nix-machine
+    executor: default
     steps:
       - checkout
 
@@ -117,7 +119,7 @@ jobs:
             ./test.sh
             
   commit-lockfile:
-    executor: nix-machine
+    executor: default
     steps:
       - checkout
       - attach_workspace:
@@ -130,19 +132,35 @@ jobs:
             git config user.name "CircleCI"
 
       - run:
-          name: Commit and push flake.lock
-          command: |
-            cp ~/repo/generated/flake.lock templates/fhs/flake.lock.jinja
-            git add templates/fhs/flake.lock.jinja
-
-            # Only commit if there are changes
-            if git diff --cached --quiet; then
-              echo "No changes to commit"
-            else
-              git commit -m "Update flake.lock from CI"
-              git push origin $(git rev-parse --abbrev-ref HEAD)
-            fi
-
+        name: Create pull request with updated flake.lock
+        command: |
+          cp ~/repo/generated/flake.lock templates/fhs/flake.lock.jinja
+          git config --global user.name "CI Bot"
+          git config --global user.email "ci@example.com"
+    
+          BRANCH_NAME=update-flake-lock-$(date +%s)
+          git checkout -b "$BRANCH_NAME"
+          git add templates/fhs/flake.lock.jinja
+    
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+            exit 0
+          fi
+    
+          git commit -m "Update flake.lock from CI [skip ci]"
+          git push origin "$BRANCH_NAME"
+    
+          # Install GitHub CLI if not present (Ubuntu-based)
+          if ! command -v gh &> /dev/null; then
+            sudo apt-get update && sudo apt-get install -y gh
+          fi
+    
+          gh auth login --with-token <<< "$GH_TOKEN"
+          gh pr create \
+            --title "Update flake.lock from CI [skip ci]" \
+            --body "Automated PR from CircleCI." \
+            --base main \
+            --head "$BRANCH_NAME"
 
 workflows:
   version: 2
