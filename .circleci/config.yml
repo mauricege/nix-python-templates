@@ -64,7 +64,7 @@ jobs:
       shell:
         type: enum
         default: zsh
-        enum: [zsh]
+        enum: [bash, zsh, fish]
     steps:
       - checkout
 
