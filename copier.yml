@@ -34,7 +34,7 @@ python_version:
 
 declarative_python_environment:
   type: bool
-  help: "Do you want to declaratively manage your python (base) environment?"
+  help: "Do you want to declaratively manage your python environment and have it automatically activated?"
   default: true
 
 python_package_manager:
@@ -92,6 +92,12 @@ codeserver:
   default: false
   when: "{{ framework == 'fhs' }}"
 
+absolute_paths:
+  type: bool
+  help: "Do you want to use absolute paths for the python environment? Not recommended if you plan on sharing your project."
+  default: false
+  when: "{{ framework == 'fhs' and declarative_python_environment }}"
+
 i_know_what_i_am_doing:
   type: bool
   help: "I know what I am doing (you probably don't)"
@@ -140,6 +146,7 @@ _message_after_update: |
 
 _tasks:
   - |
+    git --version
     if ! command -v git >/dev/null 2>&1; then
       echo "Git is not installed. Skipping git add."
       exit 0

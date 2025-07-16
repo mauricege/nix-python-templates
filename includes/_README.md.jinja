@@ -15,7 +15,7 @@
       "numpy"
     ]
     ```
-{%- if python_package_manager == 'pixi' %}
+{% if python_package_manager == 'pixi' %}
     Dependencies added under the `[project]` section will be installed from pypi via pixi's uv integration. If you want to install from conda channels, add the dependencies under `[tool.pixi.dependencies]`. 
 {%- endif %}
 

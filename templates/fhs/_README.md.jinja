@@ -34,7 +34,7 @@ Edit `flake.nix` and add packages to the `targetPkgs` list of the `buildFHSEnv` 
 
 ```nix
   ...
-  fhsEnv = pkgs.buildFHSEnv (pkgs.appimageTools.defaultFhsEnvArgs
+  {{ project_name }}-fhs = pkgs.buildFHSEnv (pkgs.appimageTools.defaultFhsEnvArgs
     // {
         name = "{{ project_name }}-fhs";
         targetPkgs = pkgs: (with pkgs; [
@@ -72,6 +72,67 @@ If you want to do this from a script, you can use the shebang line:
 ```sh
     #!/usr/bin/env -S nix run {{ _copier_conf.dst_path.as_posix() }}# --
 ```
+{% if declarative_python_environment and not absolute_paths %}
+{%- if python_package_manager == 'uv' %}
+Make sure you have exported `UV_PROJECT` to the path of your project, e.g. in the `profile` attribute of `buildFHSEnv` in `flake.nix`:
+
+```nix
+  ...
+  {{ project_name }}-fhs = pkgs.buildFHSEnv (pkgs.appimageTools.defaultFhsEnvArgs
+    // {
+        name = "{{ project_name }}-fhs";
+        targetPkgs = pkgs: (with pkgs; [
+        {{ python_package_manager }}
+        ...
+        ]);
+        profile = ''
+            export UV_PROJECT="{{ _copier_conf.dst_path.as_posix() }}"
+            ...
+        '';
+    });
+```
+{%- elif python_package_manager == 'micromamba' %}
+Make sure that `MAMBA_ROOT_PREFIX`is correctly set. If you have no global prefix set up, you might need to change the default in the `profile` attribute of `buildFHSEnv` in `flake.nix`:
+
+```nix
+  ...
+  {{ project_name }}-fhs = pkgs.buildFHSEnv (pkgs.appimageTools.defaultFhsEnvArgs
+    // {
+        name = "{{ project_name }}-fhs";
+        targetPkgs = pkgs: (with pkgs; [
+        micromamba
+        ...
+        ]);
+        profile = ''
+            export MAMBA_ROOT_PREFIX="''${MAMBA_ROOT_PREFIX:-{{ _copier_conf.dst_path.as_posix() }}/.micromamba}"
+            ...
+        '';
+    });
+```
+{%- elif python_package_manager == 'pixi' %}
+Pixi uses the `--manifest-path` flag to determine the project path. You can adapt the `pythonActivate` variable in `flake.nix`:
+
+```nix
+    ...
+    {%- if shell == "fish" %}
+    pythonActivate = ''
+        eval $(pixi shell-hook -s {{ shell }} --manifest-path {{ _copier_conf.dst_path.as_posix() }})
+    '';
+    {%- elif shell == "zsh" or shell == "bash" %}
+    pythonActivate = ''
+        eval "$(pixi shell-hook -s {{ shell }} --manifest-path {{ _copier_conf.dst_path.as_posix() }})"
+    '';
+    {%- endif %}
+    in {
+        devShells = rec {
+            {{ project_name }} = self.packages.${system}.default.env.overrideAttrs (old: {
+                ...
+            });
+        };
+    }
+```
+{%- endif %}
+{%- endif %}
 
 See also the examples for [slurm jobs](gpujob.sh) and [scripts](script.sh) in this directory.
 {% endblock %}
@@ -140,7 +201,7 @@ Just run:
 Just run:
 
 ```sh
-    micromamba install flash-attn
+    micromamba install flash-attn -c conda-forge
 ```
 
 {%- endif%}
@@ -153,5 +214,7 @@ Just run:
 {%- elif python_package_manager == 'pixi' %}
 - [pixi documentation](https://pixi.sh/)
 {%- endif %}
+{%- if python_package_manager == 'uv' %}
 - [flash-attn via uv](https://docs.astral.sh/uv/concepts/projects/config/#build-isolation)
+{%- endif %}
 {% endblock %}

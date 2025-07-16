@@ -3,7 +3,7 @@
 name = "{{ project_name }}"
 version = "0.0.1"
 description = "{{ project_description }}"
-requires-python = ">={{ python_version }}, <={{ next_major_version(python_version) }}"
+requires-python = ">={{ python_version }}, <{{ next_major_version(python_version) }}"
 dependencies = [
     {%- if python_package_manager != 'pixi' %}
     {%- for pkg in python_packages.replace(',', ' ').split() %}
