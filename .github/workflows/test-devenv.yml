@@ -107,7 +107,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: devenv-lock
-          path: generated/devenv.lock
+          path: generated/
 
 
       - name: Test with devenv
