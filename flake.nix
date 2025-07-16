@@ -39,7 +39,7 @@
         };
         packages.python-env = pkgs.writeShellApplication {
           name = "python-env";
-          runtimeInputs = [pkgs.copier];
+          runtimeInputs = [pkgs.copier pkgs.git];
           text = ''
             # set -euo pipefail
 
