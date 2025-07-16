@@ -152,6 +152,9 @@ _tasks:
       exit 0
     fi
 
+    echo "Initializing git repository..."
+    git init
+
     echo "Staging files..."
     {%- if framework == 'devenv' %}
     git add devenv.nix .envrc
