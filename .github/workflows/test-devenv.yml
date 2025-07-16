@@ -136,7 +136,7 @@ jobs:
           git checkout -b "$BRANCH_NAME"
           
           cp devenv.lock "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
-          git add templates/devenv/devenv.lock.jinja
+          git add "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
           git commit -m "Update devenv.lock.jinja" || exit 0
   
           git push origin "$BRANCH_NAME"
