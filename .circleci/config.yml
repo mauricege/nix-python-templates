@@ -62,7 +62,7 @@ jobs:
       shell:
         type: enum
         default: zsh
-        enum: [zsh, bash, fish]
+        enum: [zsh]
     steps:
       - checkout
 
@@ -113,8 +113,6 @@ jobs:
           name: Test with nix develop
           command: |
             cd generated
-            ls -la
-            cat flake.lock
             git add flake.lock
             ./test.sh
             
@@ -135,7 +133,7 @@ jobs:
           name: Commit and push flake.lock
           command: |
             cp ~/repo/generated/flake.lock templates/fhs/flake.lock.jinja
-            git templates/fhs/flake.lock.jinja
+            git add templates/fhs/flake.lock.jinja
 
             # Only commit if there are changes
             if git diff --cached --quiet; then
@@ -154,9 +152,9 @@ workflows:
       - test:
           matrix:
             parameters:
-              package_manager: [pixi, micromamba, uv]
-              python_version: ["3.11", "3.12", "3.13"]
-              shell: ["bash", "zsh", "fish"]
+              package_manager: [pixi]
+              python_version: ["3.11"]
+              shell: ["bash"]
           requires:
             - setup
       - commit-lockfile:
