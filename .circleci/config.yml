@@ -112,7 +112,11 @@ jobs:
       - run:
           name: Test with nix develop
           command: |
-            cd generated && ./test.sh
+            cd generated
+            ls -la
+            cat flake.lock
+            git add flake.lock
+            ./test.sh
             
   commit-lockfile:
     executor: nix-machine
