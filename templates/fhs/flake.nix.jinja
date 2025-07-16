@@ -50,7 +50,6 @@
           {%- endif %}
         '';
         pythonActivate = "source $UV_PROJECT/.venv/bin/activate{%- if shell == 'fish'%}.fish{%- endif %}";
-        {%- if absolute_paths %}
         {%- elif python_package_manager == "pixi" %}
         pythonInstall = "";
         {%- if shell == "fish" %}
