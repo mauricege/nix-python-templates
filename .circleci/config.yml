@@ -42,7 +42,7 @@ jobs:
       - run:
           name: Generate flake.lock
           command: |
-            cd generated && nix flake lock
+            cd generated && nix flake lock && git add flake.lock
 
       - persist_to_workspace:
           root: generated
