@@ -10,7 +10,7 @@ executors:
     working_directory: ~/repo
   docker:
     docker: # executor type
-      - image: cimg/base:stable # primary container will run the latest, production-ready 
+      - image: nixos/nix:2.30.1
     working_directory: ~/repo
  
 jobs:
@@ -19,7 +19,6 @@ jobs:
     steps:
       - checkout
 
-      - nix/install
       - run:
           name: Install Copier
           command: |
