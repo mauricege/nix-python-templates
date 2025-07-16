@@ -95,11 +95,24 @@ jobs:
           name: Run Copier
           command: |
             copier copy --force --trust --data-file answers.yml . $PWD/generated/
+      - run:
+          name: Generate test.sh
+          command: |
+            cd generated
+            cat \<<EOF > test.sh
+            #!/usr/bin/env -S nix run .# --
+
+            echo "$(which python)"
+            python --version
+            
+            python -c "import numpy" && echo "numpy import successful" || { echo "numpy import failed"; exit 1; }
+            EOF
+            chmod +x test.sh
 
       - run:
           name: Test with nix develop
           command: |
-            cd generated && nix run .# -- -c "echo $(which python); python -c 'import numpy'"
+            cd generated && ./test.sh
             
   commit-lockfile:
     executor: nix-machine
