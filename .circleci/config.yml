@@ -8,12 +8,14 @@ executors:
     machine:
       image: ubuntu-2204:current  # Full VM with more privileges than docker executor
     working_directory: ~/repo
-  default:
-    docker:
-
+  docker:
+    docker: # executor type
+      - image: cimg/base:stable # primary container will run the latest, production-ready 
+    working_directory: ~/repo
+ 
 jobs:
   setup:
-    executor: default
+    executor: docker
     steps:
       - checkout
 
@@ -119,7 +121,7 @@ jobs:
             ./test.sh
             
   commit-lockfile:
-    executor: default
+    executor: docker
     steps:
       - checkout
       - attach_workspace:
