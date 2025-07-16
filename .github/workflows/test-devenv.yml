@@ -45,7 +45,7 @@ jobs:
               declarative_python_environment: true
               python_packages: numpy
               python_package_manager: uv
-              python_version: "3.10"
+              python_version: "3.11"
               EOF
         - name: Run Copier
           run: copier copy --force --trust --data-file answers.yml . generated/
@@ -67,7 +67,7 @@ jobs:
     strategy:
       matrix:
         package_manager: [uv]
-        python_version: ["3.11"]
+        python_version: ["3.12"]
 
     steps:
       - uses: actions/checkout@v4
