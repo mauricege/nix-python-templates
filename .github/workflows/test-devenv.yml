@@ -110,6 +110,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Download shared devenv lock
+        uses: actions/download-artifact@v4
+        with:
+          name: devenv-lock
+          path: generated
+
       - name: Copy devenv.lock to the main repository
         run: |
           cp generated/devenv.lock templates/devenv/devenv.lock.jinja
