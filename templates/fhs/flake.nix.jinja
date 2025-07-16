@@ -1,5 +1,5 @@
 {
-  description = ''FHS-compatible development shell with CUDAtemplates. Should make things "just work" for most users.'';
+  description = ''FHS-compatible python development shell with {{ python_package_manager }}{%- if cudaSupport %} and CUDA{%- endif %}. Should make things "just work" for most users.'';
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
