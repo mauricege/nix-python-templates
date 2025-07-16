@@ -155,7 +155,7 @@ jobs:
               sudo apt-get update && sudo apt-get install -y gh
             fi
       
-            gh auth login --with-token <<< "$GH_TOKEN"
+            gh auth login --with-token \<<< "$GH_TOKEN"
             gh pr create \
               --title "Update flake.lock from CI [skip ci]" \
               --body "Automated PR from CircleCI." \
