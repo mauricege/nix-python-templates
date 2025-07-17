@@ -102,7 +102,7 @@
                 {%- if python_package_manager == 'uv' %}
                 export UV_PROJECT="{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}"
                 {%- endif %}
-                {%- if shell == 'zsh' or shell == 'bash '%}
+                {%- if shell == 'zsh' or shell == 'bash' %}
                 ${{ '{' ~  python_package_manager }}Hook}
                 {%- endif %}
                 {%- if declarative_python_environment %}
