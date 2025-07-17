@@ -8,17 +8,13 @@ executors:
     machine:
       image: ubuntu-2204:current  # Full VM with more privileges than docker executor
     working_directory: ~/repo
-  docker:
-    docker: # executor type
-      - image: nixos/nix:2.30.1
-    working_directory: ~/repo
  
 jobs:
   setup:
-    executor: docker
+    executor: nix-machine
     steps:
       - checkout
-
+      - nix/install
       - run:
           name: Install Copier
           command: |
