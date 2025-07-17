@@ -150,7 +150,7 @@ jobs:
             git commit -m "Update flake.lock from CI [skip ci]"
 
       - github-cli/setup:
-          github-token: GH_TOKEN
+          token: GH_TOKEN
 
       - run:
           name: Create Pull Request
