@@ -32,10 +32,8 @@
         {{ python_package_manager }}Hook = ''
           {%- if shell == "fish" %}
           eval $(micromamba shell hook --shell=fish)
-          {%- elif shell == "zsh" %}
+          {%- elif shell == "zsh" or shell == "bash" %}
           eval "$(micromamba shell hook --shell={{ shell }} | sed 's/complete / # complete/g')"
-          {%- elif shell == "bash" %}
-          eval "$(micromamba shell hook --shell=posix)"
           {%- endif %}
           '';
         pythonActivate = ''
