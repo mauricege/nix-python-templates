@@ -2,6 +2,7 @@ version: 2.1
 
 orbs:
   nix: eld/nix@1.1.1
+  github-cli: circleci/github-cli@2.0.0
 
 executors:
   nix-machine:
@@ -128,12 +129,9 @@ jobs:
             git config user.name "CircleCI"
 
       - run:
-          name: Create pull request with updated flake.lock
+          name: Update flake.lock and push changes
           command: |
             mv ~/repo/generated/flake.lock "templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
-            
-            git config --global user.name "CI Bot"
-            git config --global user.email "ci@example.com"
             
             BRANCH_NAME=update-flake-lock-$(date +%s)
             git checkout -b "$BRANCH_NAME"
@@ -146,22 +144,19 @@ jobs:
             
             git commit -m "Update flake.lock from CI [skip ci]"
             git push origin "$BRANCH_NAME"
-            
-            # Install GitHub CLI if not present (Ubuntu-based)
-            if ! command -v gh &> /dev/null; then
-              sudo apt-get update && sudo apt-get install -y gh
-            fi
-            
-            # Authenticate GitHub CLI non-interactively
-            echo "$GH_TOKEN" | gh auth login --with-token --hostname github.com
 
-            # Disable interactive prompts
-            gh config set prompt disabled
+      - github-cli/setup:
+          github-token: GH_TOKEN
+
+      - run:
+          name: Create Pull Request
+          command: |
             gh pr create \
               --title "Update flake.lock from CI [skip ci]" \
               --body "Automated PR from CircleCI." \
               --base main \
               --head "$BRANCH_NAME"
+
 
 workflows:
   version: 2
