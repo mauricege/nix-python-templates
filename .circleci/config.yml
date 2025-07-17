@@ -170,9 +170,9 @@ workflows:
       - test:
           matrix:
             parameters:
-              package_manager: [pixi]
-              python_version: ["3.11"]
-              shell: ["bash"]
+              package_manager: [pixi, micromamba, uv]
+              python_version: ["3.11", "3.12", "3.13"]
+              shell: ["bash", "zsh", "fish"]
           requires:
             - setup
       - commit-lockfile:
