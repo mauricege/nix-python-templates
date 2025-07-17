@@ -94,6 +94,7 @@ in {
       {%- if python_package_manager == 'uv' %}
       uv = {
         enable = true;
+        package = inputs.unstable.legacyPackages.${pkgs.system}.uv;
       {%- if declarative_python_environment %}
         sync = {
           enable = true;

@@ -11,6 +11,8 @@ inputs:
     inputs:
       nixpkgs:
         follows: nixpkgs
+  unstable:
+    url: github:NixOS/nixpkgs/nixos-unstable
 allowUnfree: true
 cudaSupport: {{ cudaSupport|string|lower }}
 backend: nix
