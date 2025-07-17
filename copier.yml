@@ -115,7 +115,7 @@ _subdirectory: templates/{{ framework }}
 
 _message_before_copy: |
 
-  Answer a quick few questions to hopefully solve your nix+python troubles! 
+  Answer a quick few questions to solve your nix+python troubles! 
 
 _message_after_copy: |
 
