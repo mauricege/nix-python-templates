@@ -116,11 +116,12 @@ jobs:
             ./test.sh
             
   commit-lockfile:
-    executor: docker
+    executor: nix-machine
     steps:
       - checkout
       - attach_workspace:
           at: ~/repo/generated
+      - nix/install
 
       - run:
           name: Configure Git
