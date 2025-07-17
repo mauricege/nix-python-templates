@@ -92,6 +92,12 @@ absolute_paths:
   default: false
   when: "{{ framework == 'fhs' and declarative_python_environment }}"
 
+stable:
+  type: bool
+  help: "Do you want to use a tested version of the environment? This will use a locked version of nixpkgs and other dependencies."
+  default: true
+  when: "{{ framework == 'devenv' }}"
+
 i_know_what_i_am_doing:
   type: bool
   help: "I know what I am doing (you probably don't)"
@@ -158,7 +164,7 @@ _tasks:
 
       echo "Staging files..."
       {%- if framework == 'devenv' %}
-      git add devenv.nix .envrc
+      git add devenv.nix .envrc{%- if stable %} devenv.lock{%- endif %}
       {%- elif framework == 'fhs' %}
       git add flake.nix
       {%- endif %}
