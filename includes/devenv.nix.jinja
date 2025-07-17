@@ -54,7 +54,7 @@ in {
 
     env-update = {
       description = "Update this environment from the newest upstream version.";
-      exec = "copier update --defaults -T --trust";
+      exec = "${pkgs.copier}/bin/copier update $DEVENV_ROOT --trust --skip-answered";
     };
 
     show = {
@@ -64,7 +64,7 @@ in {
         echo
         echo  Helper scripts for your environment:
         echo
-        ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|❄️ |' -e 's|••| |g'
+        ${pkgs.gnused}/bin/sed -e 's| |••|g' -e 's|=| |' <<EOF | ${pkgs.util-linuxMinimal}/bin/column -t | ${pkgs.gnused}/bin/sed -e 's|^|❄️  |' -e 's|••| |g'
         ${lib.generators.toKeyValue { } (lib.mapAttrs (name: value: value.description) config.scripts)}
         EOF
         echo
@@ -76,7 +76,6 @@ in {
 
   # https://devenv.sh/packages/
   packages = with pkgs; [
-    copier
     {%- if install_flash_attention or cudaSupport %}
     cudaPackages.cuda_nvcc
     {%- endif %}
