@@ -136,7 +136,6 @@ jobs:
           git checkout -b "$BRANCH_NAME"
           git status
           ls
-          git rm devenv.lock
           mv devenv.lock "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
           git add "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
           git status
