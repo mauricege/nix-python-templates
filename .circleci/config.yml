@@ -32,6 +32,7 @@ jobs:
             python_package_manager: pixi
             python_version: "3.11"
             shell: bash
+            stable: false
             EOF
 
       - run:
@@ -89,6 +90,7 @@ jobs:
             python_package_manager: << parameters.package_manager >>
             python_version: "<< parameters.python_version >>"
             shell: << parameters.shell >>
+            stable: false
             EOF
 
       - run:
@@ -127,7 +129,11 @@ jobs:
           command: |
             git config user.email "circleci@circleci.com"
             git config user.name "CircleCI"
-
+      - run:
+        name: Debug Environment Variables
+        command: |
+          echo "GH_TOKEN length: ${#GH_TOKEN}"
+          echo "GH_TOKEN starts with: ${GH_TOKEN:0:4}"
       - run:
           name: Update flake.lock and push changes
           command: |
@@ -143,7 +149,6 @@ jobs:
             fi
             
             git commit -m "Update flake.lock from CI [skip ci]"
-            git push origin "$BRANCH_NAME"
 
       - github-cli/setup:
           github-token: GH_TOKEN
@@ -155,7 +160,8 @@ jobs:
               --title "Update flake.lock from CI [skip ci]" \
               --body "Automated PR from CircleCI." \
               --base main \
-              --head "$BRANCH_NAME"
+              --head "$BRANCH_NAME" \
+              --push
 
 
 workflows:
