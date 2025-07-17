@@ -152,7 +152,11 @@ jobs:
               sudo apt-get update && sudo apt-get install -y gh
             fi
             
-            echo "$GH_TOKEN" | gh auth login --with-token
+            # Authenticate GitHub CLI non-interactively
+            echo "$GH_TOKEN" | gh auth login --with-token --hostname github.com
+
+            # Disable interactive prompts
+            gh config set prompt disabled
             gh pr create \
               --title "Update flake.lock from CI [skip ci]" \
               --body "Automated PR from CircleCI." \
