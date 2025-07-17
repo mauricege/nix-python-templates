@@ -2,8 +2,7 @@ version: 2.1
 
 orbs:
   nix: eld/nix@1.1.1
-  github-cli: circleci/github-cli@2.0.0
-
+  github-cli: circleci/github-cli@2.7.0
 executors:
   nix-machine:
     machine:
