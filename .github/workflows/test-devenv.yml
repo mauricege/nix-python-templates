@@ -46,6 +46,7 @@ jobs:
               python_packages: numpy
               python_package_manager: uv
               python_version: "3.11"
+              stable: false
               EOF
         - name: Run Copier
           run: copier copy --force --trust --data-file answers.yml . generated/
@@ -98,6 +99,7 @@ jobs:
             python_packages: numpy
             python_package_manager: ${{ matrix.package_manager }}
             python_version: "${{ matrix.python_version }}"
+            stable: false
             EOF
             
       - name: Run Copier
