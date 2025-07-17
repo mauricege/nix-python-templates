@@ -19,7 +19,6 @@
           config.allowUnfree = true;
           cudaSupport = {{ cudaSupport|string|lower }};
         };
-        {%- if declarative_python_environment %}
         {%- if python_package_manager == "micromamba" %}
         pythonInstall = ''
            if micromamba env list | grep -qw "$MAMBA_ROOT_PREFIX/envs/{{ project_name }}"; then
@@ -30,7 +29,7 @@
             micromamba create -q -y -f environment.yml
           fi
         '';
-        pythonActivate = ''
+        {{ python_package_manager }}Hook = ''
           {%- if shell == "fish" %}
           eval $(micromamba shell hook --shell=fish)
           {%- elif shell == "zsh" %}
@@ -38,6 +37,8 @@
           {%- elif shell == "bash" %}
           eval "$(micromamba shell hook --shell=posix)"
           {%- endif %}
+          '';
+        pythonActivate = ''
           micromamba activate {{ project_name }}
         '';
         {%- elif python_package_manager == "uv" %}
@@ -49,9 +50,13 @@
           uv sync --extra flash_attention_build --extra flash_attention_compile
           {%- endif %}
         '';
+        {{ python_package_manager }}Hook = ''
+        ''; # Any additional {{ python_package_manager }} shell hook commands can be added here - should not be necessary
         pythonActivate = "source $UV_PROJECT/.venv/bin/activate{%- if shell == 'fish'%}.fish{%- endif %}";
         {%- elif python_package_manager == "pixi" %}
         pythonInstall = "";
+        {{ python_package_manager }}Hook = ''
+        ''; # Any additional {{ python_package_manager }} shell hook commands can be added here - should not be necessary
         {%- if shell == "fish" %}
         pythonActivate = ''
           eval $(pixi shell-hook -s {{ shell }} --manifest-path {{ _copier_conf.dst_path.as_posix() if not absolute_paths else '$PWD' }})
@@ -60,7 +65,6 @@
         pythonActivate = ''
           eval "$(pixi shell-hook -s {{ shell }} --manifest-path {{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }})"
         '';
-        {%- endif %}
         {%- endif %}
         {%- endif %}
       in {
@@ -100,6 +104,9 @@
                 {%- if python_package_manager == 'uv' %}
                 export UV_PROJECT="{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}"
                 {%- endif %}
+                {%- if shell == 'zsh' or shell == 'bash '%}
+                ${{ '{' ~  python_package_manager }}Hook}
+                {%- endif %}
                 {%- if declarative_python_environment %}
                 ${pythonInstall}
                 {%- if shell == "zsh" or shell == "bash" %}
@@ -107,7 +114,7 @@
                 {%- endif %}
                 {%- endif %}
               '';
-              runScript = ''{%- if shell == "fish" %}fish{%- if declarative_python_environment %} -C "${builtins.replaceStrings ["\n"] ["; "] pythonActivate}"{%- endif %}{%- elif shell == "zsh" or shell == "bash" %}{{ shell }}{%- endif %}'';
+              runScript = ''{%- if shell == "fish" %}fish -C "${builtins.replaceStrings ["\n"] ["; "] ({{ python_package_manager }}Hook{%- if declarative_python_environment %} + pythonActivate{%- endif %})}"{%- elif shell == "zsh" or shell == "bash" %}{{ shell }}{%- endif %}'';
             });
           default = {{ project_name }}-fhs;
         };
