@@ -128,7 +128,7 @@ _message_after_copy: |
     3. Use {{ python_package_manager }} to install your python packages
     {% if not i_know_what_i_am_doing %}
     4. Figure out how to get rid of the cow 😜
-    {%- endif %}}
+    {%- endif %}
     {% elif framework == 'fhs' %}
     2. Enter the environment
 
@@ -145,7 +145,7 @@ _message_after_update: |
   Environment updated! ✅️
 
 _tasks:
-  - when: "{{ _operation == 'copy' }}"
+  - when: "{{ _copier_operation == 'copy' }}"
     command: |
       git --version
       if ! command -v git >/dev/null 2>&1; then
