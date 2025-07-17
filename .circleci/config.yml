@@ -148,6 +148,7 @@ jobs:
             fi
             
             git commit -m "Update flake.lock from CI [skip ci]"
+            git push origin "$BRANCH_NAME"
 
       - github-cli/setup:
           token: GH_TOKEN
@@ -159,9 +160,7 @@ jobs:
               --title "Update flake.lock from CI [skip ci]" \
               --body "Automated PR from CircleCI." \
               --base main \
-              --head "$BRANCH_NAME" \
-              --push
-
+              --head "$BRANCH_NAME"
 
 workflows:
   version: 2
