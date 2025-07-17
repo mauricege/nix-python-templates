@@ -121,8 +121,6 @@ jobs:
       - checkout
       - attach_workspace:
           at: ~/repo/generated
-      - nix/install
-
       - run:
           name: Configure Git
           command: |
@@ -132,14 +130,14 @@ jobs:
       - run:
           name: Create pull request with updated flake.lock
           command: |
-            cp ~/repo/generated/flake.lock templates/fhs/flake.lock.jinja
+            mv ~/repo/generated/flake.lock "templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
             
             git config --global user.name "CI Bot"
             git config --global user.email "ci@example.com"
             
             BRANCH_NAME=update-flake-lock-$(date +%s)
             git checkout -b "$BRANCH_NAME"
-            git add templates/fhs/flake.lock.jinja
+            git add "templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
             
             if git diff --cached --quiet; then
               echo "No changes to commit"
