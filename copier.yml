@@ -3,20 +3,28 @@ project_name:
   help: "Name of the environment:"
   default: "myenv"
 
-isolated_environment:
-  type: bool
-  help: "Do you want to create an isolated per-project environment? (recommended)"
-  default: true
+python_package_manager:
+  type: str
+  help: "Python package manager to use in the development environment:"
+  choices:
+    "uv - declarative + reproducible, can also function as pip replacement": uv
+    "pixi - declarative + reproducible, multi-language + multi-env": pixi
+    "micromamba - conda drop-in replacement, multi-language + multi-env": micromamba
+    "pip": pip
+  default: "{{ _python_package_manager_default }}"
 
 framework:
   type: str
   help: "Choose the framework for your develpment environment:"
-  choices:
-    devenv{%- if isolated_environment %} (recommended){%- endif %}: devenv
-    # flox: flox
-    # devbox: devbox
-    fhs{%- if not isolated_environment %} (recommended){%- endif %}: fhs
-  default: "{% if isolated_environment %}devenv{% else %}fhs{% endif %}"
+  choices: |
+    {% if python_package_manager == 'uv' or python_package_manager == 'pip' %}
+    devenv (recommended): devenv
+    {% endif %}
+    {% if python_package_manager == 'micromamba' or python_package_manager == 'pixi' or python_package_manager == 'uv' %}
+    fhs: fhs
+    {% endif %}
+  default: "{% if python_package_manager == 'uv' or python_package_manager == 'pip' %}devenv{% else %}fhs{% endif %}"
+  when: python_package_manager == 'uv'
 
 interface:
   type: str
@@ -31,32 +39,18 @@ python_version:
   type: str
   help: "Python version to use in the development environment:"
   default: "3.12"
+  when: "{{ not _python_project_file_exists or framework == 'devenv'}}"
 
 declarative_python_environment:
   type: bool
-  help: "Do you want to declaratively manage your python environment and have it automatically activated?"
+  help: "Do you want to automatically create, install and activate your python environment when activating your development shell?"
   default: true
 
-python_package_manager:
-  type: str
-  help: "Python package manager to use in the development environment:"
-  choices: |
-    "uv - declarative + reproducible, can also function as pip replacement": uv
-    {%- if not declarative_python_environment %}
-    "pip": pip
-    {%- endif %}
-    {%- if framework == 'fhs' %}
-    {%- if declarative_python_environment %}
-    "pixi - declarative + reproducible, multi-language + multi-env": pixi
-    {%- endif %}
-    "micromamba - conda drop-in replacement, multi-language + multi-env": micromamba
-    {%- endif %}
-  default: "{%- if framework == 'devenv' %}uv{% else %}pixi{% endif %}"
 
 python_packages:
   type: str
   help: "Enter a comma- or space-separated list of required Python packages (e.g., requests, rich, typer){%- if python_package_manager != 'micromamba' and python_package_manager != 'pip' and python_package_manager != 'pixi' %}. If you want to install flash attention, do NOT add it here, but answer yes to the next question.{%- endif %}"
-  when: "{{ declarative_python_environment }}"
+  when: "{{ declarative_python_environment and not _python_project_file_exists}}"
   default: ""
 
 cudaSupport:
@@ -106,6 +100,10 @@ i_know_what_i_am_doing:
     💯 🤪: true
   default: false
 
+_skip_if_exists:
+  - pyproject.toml
+  - environment.yml
+  - requirements.txt
 
 _subdirectory: templates/{{ framework }}
 
@@ -119,45 +117,48 @@ _message_after_copy: |
 
   To get started, follow these steps:
 
-    {%- if framework == 'devenv' %}
-    1. Allow direnv to load your project environment
+    1. Change into the project directory
+
+       $ cd {{ _copier_conf.dst_path.as_posix() }}
+    {% if framework == 'devenv' %}
+    2. Allow direnv to load your project environment
 
        $ direnv allow
-    
-    {%- if not i_know_what_i_am_doing %}
 
-    2. Figure out how to get rid of the cow 😜
-    {%- endif %}
-    {%- elif framework == 'fhs' %}
-    1. Enter the environment
+    3. Use {{ python_package_manager }} to install your python packages
+    {% if not i_know_what_i_am_doing %}
+    4. Figure out how to get rid of the cow 😜
+    {%- endif %}}
+    {% elif framework == 'fhs' %}
+    2. Enter the environment
 
        $ nix develop
     
-    {%- if not i_know_what_i_am_doing %}
-
-    2. Check out the _README.md file for more information on how to use the environment.
+    3. Use {{ python_package_manager }} to install your python packages
+    {% if not i_know_what_i_am_doing %}
+    4. Check out the _README.md file for more information on how to use the environment.
     {%- endif %}
     {%- endif %}
-
 
 _message_after_update: |
 
   Environment updated! ✅️
 
 _tasks:
-  - |
-    git --version
-    if ! command -v git >/dev/null 2>&1; then
-      echo "Git is not installed. Skipping git add."
-      exit 0
-    fi
+  - when: "{{ _operation == 'copy' }}"
+    command: |
+      git --version
+      if ! command -v git >/dev/null 2>&1; then
+        echo "Git is not installed. Skipping git add."
+        exit 0
+      fi
 
-    echo "Initializing git repository..."
-    git init
+      echo "Initializing git repository..."
+      git init
 
-    echo "Staging files..."
-    {%- if framework == 'devenv' %}
-    git add devenv.nix .envrc
-    {%- elif framework == 'fhs' %}
-    git add flake.nix
-    {%- endif %}
+      echo "Staging files..."
+      {%- if framework == 'devenv' %}
+      git add devenv.nix .envrc
+      {%- elif framework == 'fhs' %}
+      git add flake.nix
+      {%- endif %}
