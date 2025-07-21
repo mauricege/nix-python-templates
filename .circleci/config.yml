@@ -10,6 +10,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
+          config-path: .circleci/noop.yml
           mapping: |
             templates/fhs/.* .circleci/test.yml
             includes/.* .circleci/test.yml
