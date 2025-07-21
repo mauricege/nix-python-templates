@@ -4,7 +4,7 @@ on:
     - cron: '0 0 * * 1'  # every Monday at 00:00 UTC
 
 jobs:
-  setup:
+  update-devenv:
       runs-on: ubuntu-latest
       steps:
         - uses: actions/checkout@v4
@@ -39,39 +39,24 @@ jobs:
         - name: Run Copier
           run: copier copy --force --trust --data-file answers.yml . generated/
 
-        - name: Test with devenv
+        - name: Update devenv.lock
           working-directory: generated
           run: |
-            devenv shell "python -c 'import numpy' || EXIT 1"
-        - name: Upload devenv.lock
-          uses: actions/upload-artifact@v4
+            devenv update || EXIT 1
+      
+        - name: Move devenv.lock
+          env:
+            BRANCH_NAME: update-devenv-lock-${{ github.run_id }}
+          run: |
+            mv devenv.lock "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
+      
+        - name: Create Pull Request
+          uses: peter-evans/create-pull-request@v6
           with:
-            name: devenv-lock
-            path: generated/devenv.lock
-          
-  commit_flake_lock:
-    needs: setup
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Download shared devenv lock
-        uses: actions/download-artifact@v4
-        with:
-          name: devenv-lock
-
-      - name: Move devenv.lock
-        env:
-          BRANCH_NAME: update-devenv-lock-${{ github.run_id }}
-        run: |
-          mv devenv.lock "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
-    
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.DEVENV_LOCK_UPDATE_PAT }}
-          commit-message: Update devenv.lock.jinja
-          branch: update-devenv-lock-${{ github.run_id }}
-          title: Update devenv.lock.jinja
-          body: Automated update of devenv.lock.jinja
-          base: ${{ github.event.repository.default_branch }}
+            token: ${{ secrets.DEVENV_LOCK_UPDATE_PAT }}
+            commit-message: Update devenv.lock.jinja
+            branch: update-devenv-lock-${{ github.run_id }}
+            add-paths: "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
+            title: Update devenv.lock.jinja
+            body: Automated update of devenv.lock.jinja
+            base: ${{ github.event.repository.default_branch }}
