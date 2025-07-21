@@ -48,7 +48,7 @@ jobs:
           env:
             BRANCH_NAME: update-devenv-lock-${{ github.run_id }}
           run: |
-            mv devenv.lock "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
+            mv generated/devenv.lock "templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
       
         - name: Create Pull Request
           uses: peter-evans/create-pull-request@v6
