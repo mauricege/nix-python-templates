@@ -69,7 +69,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v6
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.DEVENV_LOCK_UPDATE_PAT }}
           commit-message: Update devenv.lock.jinja
           branch: update-devenv-lock-${{ github.run_id }}
           title: Update devenv.lock.jinja
