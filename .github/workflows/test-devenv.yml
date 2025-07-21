@@ -1,3 +1,5 @@
+name: Test devenv templates
+
 on:
   workflow_dispatch:
   push:
