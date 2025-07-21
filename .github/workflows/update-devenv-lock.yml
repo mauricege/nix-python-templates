@@ -1,3 +1,5 @@
+name: Update devenv.lock
+
 on:
  workflow_dispatch:
  schedule:
