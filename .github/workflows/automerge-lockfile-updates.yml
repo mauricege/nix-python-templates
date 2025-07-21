@@ -1,0 +1,51 @@
+name: Auto Merge PRs for lockfiles
+
+on:
+  pull_request:
+    types: [labeled, synchronize, opened, reopened]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  automerge:
+    if: github.event.pull_request.base.ref == 'main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Install GitHub CLI
+        uses: cli/cli-action@v2
+
+      - name: Get changed files
+        id: changes
+        run: |
+          changed_files=$(gh pr view ${{ github.event.pull_request.number }} --json files --jq '.files[].path')
+          echo "changed_files<<EOF" >> $GITHUB_OUTPUT
+          echo "$changed_files" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Check if PR only changes allowed lockfiles
+        id: check_files
+        run: |
+          allowed1="{% if stable %}devenv.lock{% endif %}.jinja"
+          allowed2="{% if stable %}flake.lock{% endif %}.jinja"
+
+          files=(${{ steps.changes.outputs.changed_files }})
+          echo "Changed files: ${files[*]}"
+
+          if [ "${#files[@]}" -eq 1 ] && { [ "${files[0]}" = "$allowed1" ] || [ "${files[0]}" = "$allowed2" ]; }; then
+            echo "only_lockfile=true" >> $GITHUB_OUTPUT
+          else
+            echo "only_lockfile=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Enable auto-merge
+        if: steps.check_files.outputs.only_lockfile == 'true'
+        run: |
+          gh pr merge ${{ github.event.pull_requ_
