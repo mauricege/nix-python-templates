@@ -17,9 +17,6 @@ jobs:
       - name: Check out the code
         uses: actions/checkout@v4
 
-      - name: Install GitHub CLI
-        uses: cli/cli-action@v2
-
       - name: Get changed files
         id: changes
         run: |
