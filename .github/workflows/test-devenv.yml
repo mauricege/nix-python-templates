@@ -1,11 +1,13 @@
 on:
   workflow_dispatch:
   push:
+    branches:
+      - main
     paths:
       - 'templates/devenv/**'
       - 'includes/**'
       - 'copier.yml'
-  pull_request:
+  pull_request_target:
     paths:
       - 'templates/devenv/**'
       - 'includes/**'
@@ -20,7 +22,16 @@ jobs:
         python_version: ["3.11", "3.12", "3.13"]
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout PR code
+        if: github.event_name == 'pull_request_target'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+
+      - name: Checkout main branch code
+        if: github.event_name == 'push'
+        uses: actions/checkout@v4
       
       - name: Install Nix
         uses: cachix/install-nix-action@v30
