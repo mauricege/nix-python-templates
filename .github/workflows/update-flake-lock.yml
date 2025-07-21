@@ -44,10 +44,6 @@ jobs:
             BRANCH_NAME: update-flake-lock-${{ github.run_id }}
           run: |
             mv generated/flake.lock "templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
-
-        - name: Delete generated
-          run: |
-            rm -r generated
       
         - name: Create Pull Request
           uses: peter-evans/create-pull-request@v6
@@ -57,4 +53,5 @@ jobs:
             branch: update-flake-lock-${{ github.run_id }}
             title: Update flake.lock.jinja
             body: Automated update of flake.lock.jinja
+            add-paths: "templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
             base: ${{ github.event.repository.default_branch }}
