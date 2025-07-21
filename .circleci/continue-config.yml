@@ -56,7 +56,7 @@ jobs:
             python_package_manager: << parameters.package_manager >>
             python_version: "<< parameters.python_version >>"
             shell: << parameters.shell >>
-            stable: false
+            stable: true
             EOF
 
       - run:
