@@ -30,8 +30,8 @@ jobs:
       - name: Check if PR only changes allowed lockfiles
         id: check_files
         run: |
-          allowed1="{% if stable %}devenv.lock{% endif %}.jinja"
-          allowed2="{% if stable %}flake.lock{% endif %}.jinja"
+          allowed1="templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
+          allowed2="templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
 
           files=(${{ steps.changes.outputs.changed_files }})
           echo "Changed files: ${files[*]}"
