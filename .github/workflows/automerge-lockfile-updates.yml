@@ -33,10 +33,25 @@ jobs:
           allowed1="templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
           allowed2="templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
 
-          files=(${{ steps.changes.outputs.changed_files }})
-          echo "Changed files: ${files[*]}"
+          matched="false"
+          count=0
 
-          if [ "${#files[@]}" -eq 1 ] && { [ "${files[0]}" = "$allowed1" ] || [ "${files[0]}" = "$allowed2" ]; }; then
+          # Loop through each file from changed_files output
+          echo "${{ steps.changes.outputs.changed_files }}" | while read -r file; do
+            echo "Checking file: '$file'"
+            count=$((count + 1))
+            if [[ "$file" == "$allowed1" || "$file" == "$allowed2" ]]; then
+              matched="true"
+            else
+              matched="false"
+              break
+            fi
+          done
+
+          echo "Total changed files: $count"
+          echo "Matched only lockfile: $matched"
+
+          if [[ "$count" -eq 1 && "$matched" == "true" ]]; then
             echo "only_lockfile=true" >> $GITHUB_OUTPUT
           else
             echo "only_lockfile=false" >> $GITHUB_OUTPUT
