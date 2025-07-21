@@ -17,7 +17,7 @@ Or the wrapper provided by the flake:
 ```sh
 nix run github:mauricege/nix-python-templates -- init target-directory
 ```
-The wrapper will check your target directory for existing python packaging files, such as `uv.lock`, `environment.yml` or `pixi.lock`, to automatically set sane default for some questions. It wraps copier's `copy` (`init`) and `update`.
+The wrapper will check your target directory for existing python packaging files, such as `uv.lock`, `environment.yml` or `pixi.lock`, to automatically set sane defaults for some questions. It wraps copier's `copy` (`init`) and `update`.
 
 You can also install the wrapper to your system via nix:
 ```sh
