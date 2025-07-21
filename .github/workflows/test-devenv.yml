@@ -13,7 +13,6 @@ on:
 
 jobs:
   test:
-    if: !contains(github.event.pull_request.title, '[skip ci]')
     runs-on: ubuntu-latest
     strategy:
       matrix:
