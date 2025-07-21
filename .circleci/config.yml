@@ -10,8 +10,7 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
-          config-path: .circleci/continue-config.yml
           mapping: |
-            templates/fhs/.* run_tests true
-            includes/.* run_tests true
-            copier.yml run_tests true
+            templates/fhs/.* .circleci/test.yml
+            includes/.* .circleci/test.yml
+            copier.yml .circleci/test.yml
