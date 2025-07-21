@@ -37,7 +37,7 @@ jobs:
           count=0
 
           # Loop through each file from changed_files output
-          echo "${{ steps.changes.outputs.changed_files }}" | while read -r file; do
+          while read -r file; do
             echo "Checking file: '$file'"
             count=$((count + 1))
             if [[ "$file" == "$allowed1" || "$file" == "$allowed2" ]]; then
@@ -46,7 +46,7 @@ jobs:
               matched="false"
               break
             fi
-          done
+          done < <(echo "${{ steps.changes.outputs.changed_files }}")
 
           echo "Total changed files: $count"
           echo "Matched only lockfile: $matched"
