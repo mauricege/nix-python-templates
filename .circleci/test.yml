@@ -3,11 +3,6 @@ version: 2.1
 orbs:
   nix: eld/nix@1.1.1
   github-cli: circleci/github-cli@2.7.0
-
-parameters:
-  run_tests:
-    type: boolean
-    default: false
     
 executors:
   nix-machine:
@@ -89,7 +84,6 @@ workflows:
   test-template:
     jobs:
       - test:
-          when: << pipeline.parameters.run_tests >>
           matrix:
             parameters:
               package_manager: [pixi, micromamba, uv]
