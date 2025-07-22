@@ -5,18 +5,36 @@ on:
   push:
     branches:
       - main
-    paths:
-      - 'templates/devenv/**'
-      - 'includes/**'
-      - 'copier.yml'
   pull_request:
-    paths:
-      - 'templates/devenv/**'
-      - 'includes/**'
-      - 'copier.yml'
 
 jobs:
+  filter:
+    name: Determine if test should run
+    runs-on: ubuntu-latest
+    outputs:
+      run-tests: ${{ steps.set.outputs.run-tests }}
+    steps:
+      - name: Fetch base branch
+        run: |
+          git fetch origin ${{ github.base_ref }}
+
+      - name: Check for relevant changes
+        id: set
+        run: |
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+          echo "Changed files:"
+          echo "$CHANGED"
+
+          if echo "$CHANGED" | grep -qE '^(templates/devenv/|includes/|copier.yml)'; then
+            echo "run-tests=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "run-tests=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    name: test (${{ matrix.package_manager }}, python=${{ matrix.python_version }})
+    needs: filter
+    if: needs.filter.outputs.run-tests == 'true'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -26,7 +44,7 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-      
+
       - name: Install Nix
         uses: cachix/install-nix-action@v30
         with:
@@ -36,6 +54,7 @@ jobs:
         uses: cachix/cachix-action@v15
         with:
           name: devenv
+
       - name: Install devenv
         run: nix profile install nixpkgs#devenv
 
@@ -44,18 +63,18 @@ jobs:
 
       - name: Generate answers.yml
         run: |
-            cat <<-EOF > answers.yml
-            codeserver: false
-            cudaSupport: false
-            framework: devenv
-            i_know_what_i_am_doing: false
-            declarative_python_environment: true
-            python_packages: numpy
-            python_package_manager: ${{ matrix.package_manager }}
-            python_version: "${{ matrix.python_version }}"
-            stable: true
-            EOF
-            
+          cat <<-EOF > answers.yml
+          codeserver: false
+          cudaSupport: false
+          framework: devenv
+          i_know_what_i_am_doing: false
+          declarative_python_environment: true
+          python_packages: numpy
+          python_package_manager: ${{ matrix.package_manager }}
+          python_version: "${{ matrix.python_version }}"
+          stable: true
+          EOF
+
       - name: Run Copier
         run: copier copy --force --trust --data-file answers.yml . generated/
 
@@ -63,3 +82,23 @@ jobs:
         working-directory: generated
         run: |
           devenv shell "python -c 'import numpy' || EXIT 1"
+
+  all-tests:
+    name: All devenv tests passed
+    runs-on: ubuntu-latest
+    needs: [filter, test]
+    if: always()
+    steps:
+      - name: Final test result
+        run: |
+          if [ "${{ needs.filter.outputs.run-tests }}" = "false" ]; then
+            echo "No relevant files changed — skipping tests."
+            exit 0
+          fi
+
+          if [ "${{ needs.test.result }}" != "success" ]; then
+            echo "Some tests failed."
+            exit 1
+          fi
+
+          echo "All matrix tests passed."
