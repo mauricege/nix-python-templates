@@ -18,28 +18,39 @@ jobs:
         uses: actions/checkout@v4
       - name: Set up git configuration
         run: |
-          git config --global fetch.depth 0  # Make sure to fetch all commits
-          git fetch --all  # Fetch all branches
-
+          git config --global fetch.depth 0  # Fetch full history (so we can access the base and head branches)
+  
+      - name: Fetch branches for comparison
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            # For push event, compare the pushed branch to the default branch (usually main)
+            git fetch origin main  # Or replace with your default branch name
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For pull_request event, compare the base and head branches
+            git fetch origin ${{ github.base_ref }}  # Fetch the base branch (the branch the PR is targeting)
+            git fetch origin ${{ github.head_ref }}  # Fetch the head branch (the branch the PR is coming from)
+          fi
+  
       - name: Check for relevant changes
         id: set
         run: |
-          # Fetch the base branch and head branch correctly
-          git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}  # Fetch base branch
-          git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}  # Fetch head branch
-  
-          # Check for differences
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...origin/${{ github.head_ref }})
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            # For push event, compare the pushed branch to the default branch
+            CHANGED=$(git diff --name-only origin/main..HEAD)  # Compare the pushed branch to the default branch
+          elif [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            # For pull_request event, compare the base branch to the head branch
+            CHANGED=$(git diff --name-only origin/${{ github.base_ref }}..origin/${{ github.head_ref }})
+          fi
+          
           echo "Changed files:"
           echo "$CHANGED"
   
-          # Determine if relevant files were changed
+          # Check if relevant files are changed
           if echo "$CHANGED" | grep -qE '^(templates/devenv/|includes/|copier.yml)'; then
             echo "run-tests=true" >> "$GITHUB_OUTPUT"
           else
             echo "run-tests=false" >> "$GITHUB_OUTPUT"
           fi
-
 
   test:
     name: test (${{ matrix.package_manager }}, python=${{ matrix.python_version }})
