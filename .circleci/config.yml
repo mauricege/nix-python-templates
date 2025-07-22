@@ -10,8 +10,8 @@ workflows:
     jobs:
       - path-filtering/filter:
           base-revision: main
-          config-path: .circleci/noop.yml
+          config-path: .circleci/test.yml
           mapping: |
-            templates/fhs/.* .circleci/test.yml
-            includes/.* .circleci/test.yml
-            copier.yml .circleci/test.yml
+            templates/fhs/.* skip_tests false
+            includes/.* skip_tests false
+            copier.yml skip_tests false
