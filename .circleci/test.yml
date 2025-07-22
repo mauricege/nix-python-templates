@@ -9,6 +9,11 @@ executors:
     machine:
       image: ubuntu-2204:current  # Full VM with more privileges than docker executor
     working_directory: ~/repo
+
+parameters:
+  run_tests:
+    type: bool
+    default: false
  
 jobs:
   test:
@@ -25,9 +30,6 @@ jobs:
         type: enum
         default: zsh
         enum: [bash, zsh, fish]
-      run_tests:
-        type: bool
-        default: false
     steps:
       - checkout
 
