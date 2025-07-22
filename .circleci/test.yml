@@ -95,7 +95,7 @@ jobs:
       - run:
           name: Test summary
           command: |
-            if [[ "<< parameters.run_tests >>" == "false" ]]; then
+            if [[ "<< pipeline.parameters.run_tests >>" == "false" ]]; then
               echo "Tests skipped due to path filtering."
             else
               echo "Tests were run and passed."
@@ -106,7 +106,7 @@ jobs:
 workflows:
   version: 2
   test-fhs-template:
-    when: << parameters.run_tests >>
+    when: << pipeline.parameters.run_tests >>
     jobs:
       - test:
           matrix:
@@ -119,6 +119,6 @@ workflows:
             - test
   skip-tests:
     when:
-      not: << parameters.run_tests >>
+      not: << pipeline.parameters.run_tests >>
     jobs:
       - test-summary
