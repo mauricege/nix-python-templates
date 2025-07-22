@@ -38,14 +38,12 @@ jobs:
       
       - run:
           name: Install Copier
-          when: << parameters.run_tests >>
           command: |
             nix profile add nixpkgs#copier
           
 
       - run:
           name: Generate answers.yml          
-          when: << parameters.run_tests >>
           command: |
             cat \<<EOF > answers.yml
             codeserver: false
@@ -63,13 +61,11 @@ jobs:
 
       - run:
           name: Run Copier
-          when: << parameters.run_tests >>
           command: |
             copier copy --force --trust --data-file answers.yml . $PWD/generated/
 
       - run:
           name: Generate test.sh
-          when: << parameters.run_tests >>
           command: |
             cd generated
             cat \<<EOF > test.sh
@@ -85,7 +81,6 @@ jobs:
 
       - run:
           name: Test with nix develop
-          when: << parameters.run_tests >>
           command: |
             cd generated
             git add flake.lock
@@ -112,7 +107,8 @@ jobs:
             
 workflows:
   version: 2
-  test-template:
+  test-fhs-template:
+    when: << parameters.run_tests >>
     jobs:
       - test:
           matrix:
@@ -123,3 +119,8 @@ workflows:
       - test-summary:
           requires:
             - test
+  skip-tests:
+    when:
+      not: << parameters.run_tests >>
+    jobs:
+      - test-summary
