@@ -16,22 +16,30 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Fetch base branch
+      - name: Set up git configuration
         run: |
-          git fetch origin ${{ github.base_ref }}
+          git config --global fetch.depth 0  # Make sure to fetch all commits
+          git fetch --all  # Fetch all branches
 
       - name: Check for relevant changes
         id: set
         run: |
-          CHANGED=$(git diff --name-only origin/${{ github.base_ref }} HEAD)
+          # Fetch the base branch and head branch correctly
+          git fetch origin ${{ github.base_ref }}:${{ github.base_ref }}  # Fetch base branch
+          git fetch origin ${{ github.head_ref }}:${{ github.head_ref }}  # Fetch head branch
+  
+          # Check for differences
+          CHANGED=$(git diff --name-only origin/${{ github.base_ref }}...origin/${{ github.head_ref }})
           echo "Changed files:"
           echo "$CHANGED"
-
+  
+          # Determine if relevant files were changed
           if echo "$CHANGED" | grep -qE '^(templates/devenv/|includes/|copier.yml)'; then
             echo "run-tests=true" >> "$GITHUB_OUTPUT"
           else
             echo "run-tests=false" >> "$GITHUB_OUTPUT"
           fi
+
 
   test:
     name: test (${{ matrix.package_manager }}, python=${{ matrix.python_version }})
