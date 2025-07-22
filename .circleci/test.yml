@@ -9,14 +9,16 @@ executors:
     machine:
       image: ubuntu-2204:current  # Full VM with more privileges than docker executor
     working_directory: ~/repo
+
+parameters:
+  run_tests:
+    type: boolean
+    default: true
  
 jobs:
   test:
     executor: nix-machine
     parameters:
-      run_tests:
-        type: boolean
-        default: false
       package_manager: 
         type: enum
         default: pixi
@@ -87,10 +89,6 @@ jobs:
             ./test.sh
           
   test-summary:
-    parameters:
-      run_tests:
-        type: boolean
-        default: false
     docker:
       - image: cimg/base:stable
     steps:
