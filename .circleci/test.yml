@@ -15,7 +15,7 @@ jobs:
     executor: nix-machine
     parameters:
       run_tests:
-        type: bool
+        type: boolean
         default: false
       package_manager: 
         type: enum
@@ -94,7 +94,7 @@ jobs:
   test-summary:
     parameters:
       run_tests:
-        type: bool
+        type: boolean
         default: false
     docker:
       - image: cimg/base:stable
