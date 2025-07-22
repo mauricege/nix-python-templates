@@ -121,4 +121,5 @@ workflows:
               python_version: ["3.11", "3.12", "3.13"]
               shell: ["bash", "zsh", "fish"]
       - test-summary:
-          requires: test
+          requires:
+            - test
