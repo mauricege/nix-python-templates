@@ -38,13 +38,14 @@ jobs:
       
       - run:
           name: Install Copier
+          when: << parameters.run_tests >>
           command: |
             nix profile add nixpkgs#copier
-          when: << parameters.run_tests >>
           
 
       - run:
-          name: Generate answers.yml
+          name: Generate answers.yml          
+          when: << parameters.run_tests >>
           command: |
             cat \<<EOF > answers.yml
             codeserver: false
@@ -58,17 +59,17 @@ jobs:
             shell: << parameters.shell >>
             stable: true
             EOF
-          when: << parameters.run_tests >>
 
 
       - run:
           name: Run Copier
+          when: << parameters.run_tests >>
           command: |
             copier copy --force --trust --data-file answers.yml . $PWD/generated/
-          when: << parameters.run_tests >>
 
       - run:
           name: Generate test.sh
+          when: << parameters.run_tests >>
           command: |
             cd generated
             cat \<<EOF > test.sh
@@ -80,34 +81,33 @@ jobs:
             python -c "import numpy" && echo "numpy import successful" || { echo "numpy import failed"; exit 1; }
             EOF
             chmod +x test.sh
-          when: << parameters.run_tests >>
 
 
       - run:
           name: Test with nix develop
+          when: << parameters.run_tests >>
           command: |
             cd generated
             git add flake.lock
             ./test.sh
-          when: << parameters.run_tests >>
           
-   test-summary:
-      parameters:
-        run_tests:
-          type: bool
-          default: false
-      docker:
-        - image: cimg/base:stable
-      steps:
-        - run:
-            name: Test summary
-            command: |
-              if [[ "<< parameters.run_tests >>" == "false" ]]; then
-                echo "Tests skipped due to path filtering."
-              else
-                echo "Tests were run and passed."
-              fi
-              exit 0
+  test-summary:
+    parameters:
+      run_tests:
+        type: bool
+        default: false
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: Test summary
+          command: |
+            if [[ "<< parameters.run_tests >>" == "false" ]]; then
+              echo "Tests skipped due to path filtering."
+            else
+              echo "Tests were run and passed."
+            fi
+            exit 0
 
             
 workflows:
