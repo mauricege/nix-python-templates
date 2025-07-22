@@ -25,6 +25,9 @@ jobs:
         type: enum
         default: zsh
         enum: [bash, zsh, fish]
+      run_tests:
+        type: bool
+        default: false
     steps:
       - checkout
 
@@ -37,6 +40,8 @@ jobs:
           name: Install Copier
           command: |
             nix profile add nixpkgs#copier
+          when: << parameters.run_tests >>
+          
 
       - run:
           name: Generate answers.yml
@@ -53,11 +58,15 @@ jobs:
             shell: << parameters.shell >>
             stable: true
             EOF
+          when: << parameters.run_tests >>
+
 
       - run:
           name: Run Copier
           command: |
             copier copy --force --trust --data-file answers.yml . $PWD/generated/
+          when: << parameters.run_tests >>
+
       - run:
           name: Generate test.sh
           command: |
@@ -71,6 +80,8 @@ jobs:
             python -c "import numpy" && echo "numpy import successful" || { echo "numpy import failed"; exit 1; }
             EOF
             chmod +x test.sh
+          when: << parameters.run_tests >>
+
 
       - run:
           name: Test with nix develop
@@ -78,6 +89,22 @@ jobs:
             cd generated
             git add flake.lock
             ./test.sh
+          when: << parameters.run_tests >>
+          
+   test-summary:
+      docker:
+        - image: cimg/base:stable
+      steps:
+        - run:
+            name: Test summary
+            command: |
+              if [[ "<< parameters.run_tests >>" == "false" ]]; then
+                echo "Tests skipped due to path filtering."
+              else
+                echo "Tests were run and passed."
+              fi
+              exit 0
+
             
 workflows:
   version: 2
@@ -89,3 +116,5 @@ workflows:
               package_manager: [pixi, micromamba, uv]
               python_version: ["3.11", "3.12", "3.13"]
               shell: ["bash", "zsh", "fish"]
+      - test-summary:
+          requires: test
