@@ -12,6 +12,6 @@ workflows:
           base-revision: main
           config-path: .circleci/test.yml
           mapping: |
-            templates/fhs/.* skip_tests false
-            includes/.* skip_tests false
-            copier.yml skip_tests false
+            templates/fhs/.* run_tests true
+            includes/.* run_tests true
+            copier.yml run_tests true
