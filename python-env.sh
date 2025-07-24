@@ -17,8 +17,16 @@ subcommand="$1"
 shift
 
 TEMPLATE_DIR="gh:mauricege/nix-python-templates"
-dst_path="${1:-$PWD}"
-dst_path=$(realpath "$dst_path")
+
+if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+    dst_path=$(realpath "$1")
+    shift
+else
+    dst_path="$PWD"
+fi
+
+# Save remaining arguments for copier
+copier_args=("$@")
 
 case "$subcommand" in
     init)
@@ -56,10 +64,10 @@ case "$subcommand" in
         pythonPackageManager=''${pythonPackageManager:-"uv"}
         pythonProjectFileExists=''${pythonProjectFileExists:-false}
 
-        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists"
+        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
         ;;
     update)
-        copier update "$dst_path" --trust --skip-answered
+        copier update "$dst_path" --trust --skip-answered "${copier_args[@]}"
         ;;
     *)
         usage
