@@ -96,7 +96,6 @@ stable:
   type: bool
   help: "Do you want to use a tested version of the environment? This will use a locked version of nixpkgs and other dependencies."
   default: true
-  when: "{{ framework == 'devenv' }}"
 
 i_know_what_i_am_doing:
   type: bool
@@ -166,5 +165,5 @@ _tasks:
       {%- if framework == 'devenv' %}
       git add devenv.nix .envrc{%- if stable %} devenv.lock{%- endif %}
       {%- elif framework == 'fhs' %}
-      git add flake.nix
+      git add flake.nix {% if stable %}flake.lock{%- endif %}
       {%- endif %}
