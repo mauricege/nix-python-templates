@@ -90,6 +90,14 @@
 
                 # shells
                 {{ shell }}
+
+                # libraries
+                libxcrypt-legacy # needed for older python versions
+
+                {%- if cudaSupport %}
+                # CUDA
+                cudatoolkit
+                {%- endif %}
               ]);
               profile = ''
                 {%- if cudaSupport %}
@@ -99,7 +107,7 @@
                 {%- if python_package_manager == 'micromamba' %}
                 export MAMBA_ROOT_PREFIX="''${MAMBA_ROOT_PREFIX:-{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}/.micromamba}"
                 {%- endif %}
-                {%- if python_package_manager == 'uv' %}
+                {%- if python_package_manager == 'uv' and declarative_python_environment %}
                 export UV_PROJECT="{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}"
                 {%- endif %}
                 {%- if shell == 'zsh' or shell == 'bash' %}
