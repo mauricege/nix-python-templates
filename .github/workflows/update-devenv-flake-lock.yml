@@ -33,19 +33,14 @@ jobs:
               python_version: "3.11"
               stable: false
               EOF
-        - name: Run Copier
+        - name: Run Copier and update flake.lock
           run: copier copy --force --trust --data-file answers.yml . generated/
-
-        - name: Update flake lock
-          working-directory: generated/.nix
-          run: |
-            nix flake update
        
         - name: Move flake.lock
           env:
             BRANCH_NAME: update-devenv-flake-lock-${{ github.run_id }}
           run: |
-            mv generated/.nix/flake.lock "templates/devenv/{% if interface == "flake" %}.nix{% endif %}/{% if stable %}flake.lock{% endif %}.jinja"
+            mv generated/.nix/flake.lock "templates/devenv/{% if interface == 'flake' %}.nix{% endif %}/{% if stable %}flake.lock{% endif %}.jinja"
       
         - name: Create Pull Request
           uses: peter-evans/create-pull-request@v6
@@ -55,5 +50,5 @@ jobs:
             branch: update-devenv-flake-lock-${{ github.run_id }}
             title: Update flake.lock.jinja
             body: Automated update of flake.lock.jinja
-            add-paths: templates/devenv/{% if interface == "flake" %}.nix{% endif %}/{% if stable %}flake.lock{% endif %}.jinja
+            add-paths: "templates/devenv/{% if interface == 'flake' %}.nix{% endif %}/{% if stable %}flake.lock{% endif %}.jinja"
             base: ${{ github.event.repository.default_branch }}
