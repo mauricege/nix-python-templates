@@ -32,6 +32,7 @@ jobs:
         run: |
           allowed1="templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
           allowed2="templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
+          allowed3="templates/devenv/{% if interface == "flake" %}.nix{% endif %}/{% if stable %}flake.lock{% endif %}.jinja"
 
           matched="false"
           count=0
@@ -40,7 +41,7 @@ jobs:
           while read -r file; do
             echo "Checking file: '$file'"
             count=$((count + 1))
-            if [[ "$file" == "$allowed1" || "$file" == "$allowed2" ]]; then
+            if [[ "$file" == "$allowed1" || "$file" == "$allowed2" || "$file" == "$allowed3" ]]; then
               matched="true"
             else
               matched="false"
