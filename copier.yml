@@ -31,7 +31,7 @@ interface:
   help: "Do you want to use the devenv cli or a flake?"
   choices:
     cli: cli
-    flake: flake
+    flakes - use this on (HPC) clusters: flake
   default: flake
   when: framework == 'devenv'
 
