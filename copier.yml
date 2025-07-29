@@ -32,7 +32,7 @@ interface:
   choices:
     cli: cli
     flake: flake
-  default: cli
+  default: flake
   when: framework == 'devenv'
 
 python_version:
@@ -165,7 +165,13 @@ _tasks:
       {%- if framework == 'devenv' and interface == 'cli' %}
       git add devenv.nix .envrc{%- if stable %} devenv.lock{%- endif %}
       {%- elif framework == 'devenv' and interface == 'flake' %}
-      git add .nix/flake.nix .envrc
+      git add .nix/flake.nix .envrc{%- if stable %} .nix/flake.lock{%- endif %}
+      {%- if stable == false %}
+      pushd $(pwd)
+      cd .nix
+      nix flake update
+      popd
+      {%- endif %}
       {%- elif framework == 'fhs' %}
       git add flake.nix {% if stable %}flake.lock{%- endif %}
       {%- endif %}
