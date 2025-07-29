@@ -32,7 +32,7 @@ jobs:
         run: |
           allowed1="templates/devenv/{% if stable %}devenv.lock{% endif %}.jinja"
           allowed2="templates/fhs/{% if stable %}flake.lock{% endif %}.jinja"
-          allowed3="templates/devenv/{% if interface == "flake" %}.nix{% endif %}/{% if stable %}flake.lock{% endif %}.jinja"
+          allowed3="templates/devenv/{% if interface == 'flake' %}.nix{% endif %}/{% if stable %}flake.lock{% endif %}.jinja"
 
           matched="false"
           count=0
