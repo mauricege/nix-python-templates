@@ -33,7 +33,7 @@ interface:
     cli: cli
     flakes - use this on (HPC) clusters: flake
   default: flake
-  when: framework == 'devenv'
+  when: "{{ framework == 'devenv' }}"
 
 python_version:
   type: str
