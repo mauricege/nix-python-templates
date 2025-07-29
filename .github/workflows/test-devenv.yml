@@ -73,10 +73,10 @@ jobs:
           extra_nix_config: |
             access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
       - name: Configure Cachix
-        if: matrix.interface == 'cli'
         uses: cachix/cachix-action@v15
         with:
           name: devenv
+          extraPullNames: nixpkgs-python
 
       - name: Install devenv
         if: matrix.interface == 'cli'
