@@ -12,7 +12,7 @@ This folder contains a reproducible development shell powered by [devenv](https:
 {% endblock %}
 
 {% block getting_started %}
-1. **Install [Nix](https://nixos.org/download.html), [devenv](https://devenv.sh/getting-started/), and [direnv](https://direnv.net/docs/installation.html)**
+1. **Install [Nix](https://nixos.org/download.html){%- if interface == 'cli' %}, [devenv](https://devenv.sh/getting-started/){%- endif %} and [direnv](https://direnv.net/docs/installation.html)**
 2. Allow direnv in this directory (run once):
 
     ```sh
@@ -23,7 +23,7 @@ This folder contains a reproducible development shell powered by [devenv](https:
 {% block extending_environment %}
 ### Add System Packages
 
-Edit `devenv.nix` and add packages to the `packages` list:
+Edit `{%- if interface == 'flake' %}.nix/{%- endif %}devenv.nix` and add packages to the `packages` list:
 
 ```nix
 packages = with pkgs; [
@@ -35,7 +35,7 @@ packages = with pkgs; [
 {% if interface == 'cli' %}
 Find packages provided by your inputs (`devenv.yaml`) with `devenv search`. This is slow on the first run, as it has to git-checkout the revision of nixpkgs that your `devenv.lock` points to. You can also utilize `nix-search` a CLI for [search.nixos.org](https://search.nixos.org) - this searches the current maintained nix-channels.
 {% else %}
-You can also use the [NixOS search](https://search.nixos.org/packages) to find packages (or the CLI `nix-search`). Just copy the package name and add it to the `packages` list.
+You can use the [NixOS search](https://search.nixos.org/packages) to find packages (or the CLI `nix-search`). Just copy the package name and add it to the `packages` list.
 {% endif %}
 ### Enable Languages
 
@@ -76,7 +76,7 @@ If you insist on doing it manually, here are the steps:
 
 1. **Ensure `nvcc` is available** by adding it to your `devenv.nix`:
 
-    Edit your `devenv.nix` to include the correct CUDA version. For example, to use CUDA 12.4:
+    Edit your `{%- if interface == 'flake' %}.nix/{%- endif %}devenv.nix` to include the correct CUDA version. For example, to use CUDA 12.4:
 
     ```nix
     let
@@ -199,7 +199,7 @@ Now, both `torch` and `flash-attn` will be reproducibly managed by `{{ python_pa
 {% block additional %}
 ### How do I get rid of the cow?
 
-If you are confident that you will remember where to find this readme, you can disable the cowsay output in `devenv.nix` by modifying `enterShell`:
+If you are confident that you will remember where to find this readme, you can disable the cowsay output in `{%- if interface == 'flake' %}.nix/{%- endif %}devenv.nix` by modifying `enterShell`:
 
 ```nix
 enterShell = ''

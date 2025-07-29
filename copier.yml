@@ -33,7 +33,7 @@ interface:
     cli: cli
     flake: flake
   default: cli
-  when: false
+  when: framework == 'devenv'
 
 python_version:
   type: str
@@ -162,8 +162,10 @@ _tasks:
       git init
 
       echo "Staging files..."
-      {%- if framework == 'devenv' %}
+      {%- if framework == 'devenv' and interface == 'cli' %}
       git add devenv.nix .envrc{%- if stable %} devenv.lock{%- endif %}
+      {%- elif framework == 'devenv' and interface == 'flake' %}
+      git add .nix/flake.nix .envrc
       {%- elif framework == 'fhs' %}
       git add flake.nix {% if stable %}flake.lock{%- endif %}
       {%- endif %}
