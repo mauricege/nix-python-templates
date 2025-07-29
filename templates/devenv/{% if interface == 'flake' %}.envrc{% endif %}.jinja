@@ -12,6 +12,7 @@ direnv_layout_dir() {
 
 watch_file .nix/flake.nix
 watch_file .nix/flake.lock
+watch_file .nix/devenv.nix
 {%- if python_package_manager == 'uv' %}
 watch_file uv.lock
 {%- endif %}
