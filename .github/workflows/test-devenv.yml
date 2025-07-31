@@ -101,7 +101,7 @@ jobs:
           EOF
 
       - name: Run Copier
-        run: copier copy --force --trust --data-file answers.yml . generated/
+        run: copier copy --force --trust -r HEAD --data-file answers.yml . generated/
 
       - name: Install direnv
         run: |
