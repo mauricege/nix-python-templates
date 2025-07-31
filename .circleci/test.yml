@@ -76,7 +76,7 @@ jobs:
             echo "$(which python)"
             python --version
             
-            python -c "import numpy" && echo "numpy import successful" || { echo "numpy import failed"; exit 1; }
+            sh -c 'python -c "import numpy" && echo "numpy import successful" || { echo "numpy import failed"; exit 1; }'
             EOF
             chmod +x test.sh
 
