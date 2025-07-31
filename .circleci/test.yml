@@ -64,7 +64,7 @@ jobs:
       - run:
           name: Run Copier
           command: |
-            copier copy --force --trust --data-file answers.yml . $PWD/generated/
+            copier copy --force --trust -r HEAD --data-file answers.yml . $PWD/generated/
 
       - run:
           name: Generate test.sh
