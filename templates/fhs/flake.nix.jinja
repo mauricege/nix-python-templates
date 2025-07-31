@@ -85,8 +85,6 @@
         {{ python_package_manager }}Hook = ''
         ''; # Any additional {{ python_package_manager }} shell hook commands can be added here - should not be necessary
         pythonActivate = ''
-          # Adapt this if you want to activate the environment from somewhere else
-          export PIXI_PROJECT_MANIFEST="{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}/pyproject.toml"
           {%- if shell == 'fish' %}
           eval $(pixi shell-hook -s {{ shell }})
           {%- elif shell == 'zsh' or shell == 'bash' %}
@@ -137,7 +135,11 @@
                 export MAMBA_ROOT_PREFIX="''${MAMBA_ROOT_PREFIX:-{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}/.micromamba}"
                 {%- endif %}
                 {%- if python_package_manager == 'uv' and declarative_python_environment %}
+                # Adapt this path if you want to use an environment from a different location
                 export UV_PROJECT="{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}"
+                {%- elif python_package_manager == 'pixi' %}
+                # Adapt this path if you want to use an environment from a different location
+                export PIXI_PROJECT_MANIFEST="{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}/pyproject.toml"
                 {%- endif %}
                 {%- if shell == 'zsh' or shell == 'bash' %}
                 ${{ '{' ~  python_package_manager }}Hook}
