@@ -40,6 +40,23 @@
           micromamba activate {{ project_name }}
         '';
         {%- elif python_package_manager == "uv" %}
+        uv = pkgs.writeShellScriptBin "uv" ''
+          VENV_DIR="''${VIRTUAL_ENV:-''${UV_PROJECT:-$PWD}}"
+          MOUNT_POINT=$(${pkgs.coreutils}/bin/df -P "$VENV_DIR" | tail -1 | ${pkgs.gawk}/bin/awk '{print $6}')
+          # set the cache directory for uv to be on the same filesystem as the current working directory
+          # This makes sure that cache files are hardlinked to the virtual environment and not copied
+
+          # Try a shared cache directory first
+          if [ -d "$MOUNT_POINT/.cache" ] && [ -w "$MOUNT_POINT/.cache" ]; then
+            UV_CACHE_DIR="$MOUNT_POINT/.cache/uv"
+          # Fallback to user-specific cache directory
+          elif [ -d "$MOUNT_POINT/$USER/.cache" ] && [ -w "$MOUNT_POINT/$USER/.cache" ]; then
+            UV_CACHE_DIR="$MOUNT_POINT/$USER/.cache/uv"
+          fi
+          export UV_CACHE_DIR
+          echo "Using UV_CACHE_DIR: $UV_CACHE_DIR"
+          exec ${pkgs.uv}/bin/uv "$@"
+        '';
         pythonInstall = ''
           uv venv --python {{ python_version }} --allow-existing --managed-python
           uv sync{%- if install_flash_attention %} --extra flash_attention_build{% endif %}
@@ -52,18 +69,30 @@
         ''; # Any additional {{ python_package_manager }} shell hook commands can be added here - should not be necessary
         pythonActivate = "source $UV_PROJECT/.venv/bin/activate{%- if shell == 'fish'%}.fish{%- endif %}";
         {%- elif python_package_manager == "pixi" %}
+        pixi = pkgs.writeShellScriptBin "pixi" ''
+          VENV_DIR="''${PIXI_PROJECT_MANIFEST:-''${PIXI_PROJECT_ROOT:-$PWD}}"
+          MOUNT_POINT=$(${pkgs.coreutils}/bin/df -P "$VENV_DIR" | tail -1 | ${pkgs.gawk}/bin/awk '{print $6}')
+          # set the cache directory for pixi to be on the same filesystem as the current working directory
+          # This makes sure that cache files are hardlinked to the virtual environment and not copied
+
+          if [ -d "$MOUNT_POINT/$USER/.cache" ] && [ -w "$MOUNT_POINT/$USER/.cache" ]; then
+            PIXI_CACHE_DIR="$MOUNT_POINT/$USER/.cache/pixi"
+          fi
+          export PIXI_CACHE_DIR
+          exec ${pkgs.pixi}/bin/pixi "$@"
+        '';
         pythonInstall = "";
         {{ python_package_manager }}Hook = ''
         ''; # Any additional {{ python_package_manager }} shell hook commands can be added here - should not be necessary
-        {%- if shell == "fish" %}
         pythonActivate = ''
-          eval $(pixi shell-hook -s {{ shell }} --manifest-path {{ _copier_conf.dst_path.as_posix() if not absolute_paths else '$PWD' }})
+          # Adapt this if you want to activate the environment from somewhere else
+          export PIXI_PROJECT_MANIFEST="{{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }}/pyproject.toml"
+          {%- if shell == 'fish' %}
+          eval $(pixi shell-hook -s {{ shell }})
+          {%- elif shell == 'zsh' or shell == 'bash' %}
+          eval "$(pixi shell-hook -s {{ shell }})"
+          {%- endif %}
         '';
-        {%- elif shell == "zsh" or shell == "bash" %}
-        pythonActivate = ''
-          eval "$(pixi shell-hook -s {{ shell }} --manifest-path {{ _copier_conf.dst_path.as_posix() if absolute_paths else '$PWD' }})"
-        '';
-        {%- endif %}
         {%- endif %}
       in {
         devShells = rec {
