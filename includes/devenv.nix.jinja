@@ -40,8 +40,10 @@ in {
     GREET = "";
     {%- if python_package_manager == 'uv' %}
     UV_PROJECT = config.devenv.root;
-    UV_PYTHON = lib.mkForce ""; # Needed temporarily because https://github.com/cachix/devenv/pull/1959 breaks python wrapping for uv
-    {%- endif%}
+    {%- endif %}
+    {%- if cudaSupport %}
+    CUDA_HOME = "${cudaPackages.cudatoolkit}";
+    {%- endif %}
   };
 
   # https://devenv.sh/scripts/
