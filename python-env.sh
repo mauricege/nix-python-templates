@@ -18,25 +18,26 @@ shift
 
 TEMPLATE_DIR="gh:mauricege/nix-python-templates"
 
-if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
-    dst_path=$(realpath "$1")
-    shift
-else
-    dst_path="$PWD"
-fi
 
-# Save remaining arguments for copier
-copier_args=("$@")
 
 case "$subcommand" in
     init)
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            dst_path=$(realpath "$1")
+            shift
+        else
+            dst_path="$PWD"
+        fi
+        
+        # Save remaining arguments for copier
+        copier_args=("$@")
         # List files in the destination path, or set to empty if directory does not exist
         if [ -d "$dst_path" ]; then
             files=$(ls "$dst_path")
         else
             files=""
         fi
-
+        
         echo "Checking for python package manager files in $dst_path:"
         if [[ $files == *"pyproject.toml"* ]]; then
             echo "Found pyproject.toml, using uv as package manager. Could also be poetry or pixi, but we default to uv."
@@ -48,28 +49,94 @@ case "$subcommand" in
             pythonPackageManager="uv"
             pythonProjectFileExists=true
         fi
-
+        
         if [[ $files == *"pixi.lock"* ]] || [[ $files == *"pixi.toml"* ]]; then
             echo "Found pixi.lock or pixi.toml, using pixi as package manager."
             pythonPackageManager="pixi"
             pythonProjectFileExists=true
         fi
-
+        
         if [[ $files == *"environment.yml"* ]]; then
             echo "Found environment.yml, using micromamba as package manager."
             pythonPackageManager="micromamba"
             pythonProjectFileExists=true
         fi
-
+        
         pythonPackageManager=''${pythonPackageManager:-"uv"}
         pythonProjectFileExists=''${pythonProjectFileExists:-false}
-
+        
         copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
-        ;;
+    ;;
     update)
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            dst_path=$(realpath "$1")
+            shift
+        else
+            dst_path="$PWD"
+        fi
+        
+        # Save remaining arguments for copier
+        copier_args=("$@")
         copier update "$dst_path" --trust --skip-answered "${copier_args[@]}"
-        ;;
+    ;;
+    template)
+        template_name="$1"
+        shift
+        
+        # Only allow 'devenv' or 'FHS'
+        if [[ "$template_name" != "devenv" && "$template_name" != "fhs" ]]; then
+            echo "Error: template_name must be 'devenv' or 'fhs'"
+            exit 1
+        fi
+        
+        if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
+            dst_path=$(realpath "$1")
+            shift
+        else
+            dst_path="$PWD"
+        fi
+
+        mkdir -p "$dst_path"
+        
+        copier_args=("$@")
+        
+        # Create a temporary answers.yml file
+        answers_file="$dst_path/.copier-answers.yml"
+        if [[ "$template_name" == "devenv" ]]; then
+            cat > "$answers_file" <<EOF
+_src_path: $dst_path
+cudaSupport: true
+declarative_python_environment: true
+framework: devenv
+i_know_what_i_am_doing: false
+install_flash_attention: false
+interface: flake
+project_name: "$(basename "$dst_path")-$template_name"
+python_package_manager: uv
+python_packages: ''
+python_version: '3.12'
+stable: true
+EOF
+        else
+            cat > "$answers_file" <<EOF
+_src_path: $dst_path
+codeserver: true
+cudaSupport: true
+declarative_python_environment: false
+framework: fhs
+i_know_what_i_am_doing: false
+project_name: "$(basename "$dst_path")-$template_name"
+python_package_manager: uv
+python_version: '3.12'
+shell: zsh
+stable: true
+EOF
+        fi
+        
+        echo "Using template '$template_name' for destination '$dst_path'"
+        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --defaults --answers-file ".copier-answers.yml" "${copier_args[@]}"
+    ;;
     *)
         usage
-        ;;
+    ;;
 esac
