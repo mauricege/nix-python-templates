@@ -40,9 +40,17 @@ case "$subcommand" in
         
         echo "Checking for python package manager files in $dst_path:"
         if [[ $files == *"pyproject.toml"* ]]; then
-            echo "Found pyproject.toml, using uv as package manager. Could also be poetry or pixi, but we default to uv."
-            pythonPackageManager="uv"
             pythonProjectFileExists=true
+            if grep -q '^\[tool.uv' "$dst_path/pyproject.toml"; then
+                echo "Found [tool.uv] in pyproject.toml, using uv as package manager."
+                pythonPackageManager="uv"
+            elif grep -q '^\[tool.pixi' "$dst_path/pyproject.toml"; then
+                echo "Found [tool.pixi] in pyproject.toml, using pixi as package manager."
+                pythonPackageManager="pixi"
+            else
+                echo "pyproject.toml found, but no specific tool section detected. Defaulting to uv."
+                pythonPackageManager="uv"
+            fi
         fi
         if [[ $files == *"uv.lock"* ]]; then
             echo "Found uv.lock, using uv as package manager."
