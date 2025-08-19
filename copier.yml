@@ -11,7 +11,7 @@ python_package_manager:
     "pixi - declarative + reproducible, multi-language + multi-env": pixi
     "micromamba - conda drop-in replacement, multi-language + multi-env": micromamba
     "pip": pip
-  default: "{{ _python_package_manager_default }}"
+  default: "{{ _python_package_manager_default or 'uv' }}"
 
 framework:
   type: str
@@ -43,8 +43,9 @@ python_version:
 
 declarative_python_environment:
   type: bool
-  help: "Do you want to automatically create, install and activate your python environment when activating your development shell?"
+  help: "Do you want a project-specific declarative python environment that is automatically installed and activated? (recommended)"
   default: true
+  when: "{{ not _python_project_file_exists }}"
 
 
 python_packages:
@@ -53,16 +54,17 @@ python_packages:
   when: "{{ declarative_python_environment and not _python_project_file_exists}}"
   default: ""
 
-cudaSupport:
-  type: bool
-  help: "Do you want to install CUDA support?"
-  default: true
-
 install_flash_attention:
   type: bool
   help: "Do you want to install flash attention?"
   default: false
   when: "{{ declarative_python_environment and python_package_manager != 'micromamba' and python_package_manager != 'pixi' and cudaSupport }}"
+
+cudaSupport:
+  type: bool
+  help: "Do you want to install CUDA support?"
+  default: true
+  when: "{{ not install_flash_attention }}"
 
 shell:
   type: str
@@ -96,6 +98,7 @@ stable:
   type: bool
   help: "Do you want to use a tested version of the environment? This will use a locked version of nixpkgs and other dependencies."
   default: true
+  when: false
 
 i_know_what_i_am_doing:
   type: bool
