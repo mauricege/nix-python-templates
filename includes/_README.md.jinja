@@ -5,7 +5,16 @@
 ## Getting Started
 {% block getting_started %}{% endblock %}
 ## Manage Python Dependencies with {{ python_package_manager }}
-{% if (python_package_manager == 'uv' or python_package_manager == 'pixi') and declarative_python_environment %}
+{% if (python_package_manager == 'uv' or python_package_manager == 'pixi') %}
+{%- if not declarative_python_environment %}
+0. Initialize a new Python project with `{{ python_package_manager }}`:
+
+    ```sh
+    {{ python_package_manager }} init{%- if python_package_manager == 'pixi' %} --format pyproject{%- endif %}
+    ```
+
+    This will create a `pyproject.toml` file in the current directory.
+{%- endif %}
 1. Add your dependencies to `pyproject.toml` under the `[project]` section, for example:
 
     ```toml
@@ -18,7 +27,6 @@
 {% if python_package_manager == 'pixi' %}
     Dependencies added under the `[project]` section will be installed from pypi via pixi's uv integration. If you want to install from conda channels, add the dependencies under `[tool.pixi.dependencies]`. 
 {%- endif %}
-
 2. Use `{{ python_package_manager }}` to resolve and lock dependencies:
 
     ```sh
@@ -47,6 +55,39 @@
     pixi add --pypi <package>
     ```
 {% endif%}
+{% if python_package_manager == 'uv' %}
+`uv` also supports a pip-like interface for managing dependencies via the `uv pip` command. You can use it to install packages directly from PyPI or other sources:
+
+```sh
+uv pip install <package>
+```
+
+The packages will always be installed to the virtual environment created by `uv`, and you can use `uv pip list` to see installed packages. Most of the regular pip commands are supported (documentation: [uv pip](https://docs.astral.sh/uv/pip/)).
+{%- endif %}
+{% elif python_package_manager == 'micromamba' %}
+{% if declarative_python_environment %}
+Steps 1 and 2 are not necessary when, as a default environment is created and activated automatically through the devShell exposed by `flake.nix`. You can skip to step 3.
+{% endif %}
+1. Create a new environment with `micromamba`:
+
+    ```sh
+    micromamba create -n myenv python=3.11
+    ```
+2. Activate the environment:
+
+    ```sh
+    micromamba activate myenv
+    ```
+3. Install dependencies using `micromamba`:
+
+    ```sh
+    micromamba install requests numpy
+    ```
+4. To add a new dependency: 
+
+    ```sh
+    micromamba install <package>
+    ```
 {% endif %}
 ## Extending the Environment
 {% block extending_environment %}{% endblock %}
@@ -57,4 +98,4 @@
 ## Resources
 {% block resources %}{% endblock %}
 --------------------------------------------------------------------------------------
-{% block additional %}{% endblock %}
+{% block additional %}{%- endblock %}
