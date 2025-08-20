@@ -1,0 +1,25 @@
+#!/usr/bin/env -S nix run {{ _copier_conf.dst_path.as_posix() }}# --
+
+export XDG_RUNTIME_DIR="$HOME/vsc_runtime"
+VSC_IP_REMOTE="$(hostname -s)"
+VSC_PORT_REMOTE="$(python -c 'import socket; s=socket.socket(); s.bind(("",0)); print(s.getsockname()[1]); s.close()')"
+
+# start the server
+echo "Starting openvscode-server on port $VSC_PORT_REMOTE"
+openvscode-server --host 0.0.0.0 --port=$VSC_PORT_REMOTE &
+
+# we need to get the secret token to access the server
+VSC_REMOTE_TOKEN=""
+while [ -z $VSC_REMOTE_TOKEN ]; do
+  VSC_REMOTE_TOKEN=$(grep tkn /home/$USER/.$SLURM_JOB_NAME.out | sed 's/.*=//')
+  sleep 1
+done
+
+# Save remote IP, remote port, slurm jobid and remote token to state file
+# Copy this section to your custom scripts
+rm /home/$USER/.${SLURM_JOB_NAME}.state
+echo "Remote IP:$VSC_IP_REMOTE" >>/home/$USER/.${SLURM_JOB_NAME}.state
+echo "Remote PORT:$VSC_PORT_REMOTE" >>/home/$USER/.${SLURM_JOB_NAME}.state
+echo "Slurm JOBID:$SLURM_JOB_ID" >>/home/$USER/.${SLURM_JOB_NAME}.state
+echo "Remote Token:$VSC_REMOTE_TOKEN" >>/home/$USER/.${SLURM_JOB_NAME}.state
+wait
