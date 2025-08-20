@@ -206,7 +206,10 @@ Just run:
 
 {%- endif%}
 {% endblock %}
-
+{% if codeserver %}
+## Code server
+`vscode.sh` is a slurm-submittable script that starts a code server instance in the FHS environment. It launches [openvscode-server](https://github.com/gitpod-io/openvscode-server) inside the shell, allowing you to access VS Code in your browser. It uses a random free port and saves the connection information to a file in the user's home directory.
+{% endif %}
 {% block resources %}
 - [blog post on FHSEnvs for python](https://lavafroth.is-a.dev/post/cuda-on-nixos-without-sacrificing-ones-sanity/)
 {%- if python_package_manager == 'uv' %}
