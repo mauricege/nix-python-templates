@@ -39,32 +39,32 @@ python_version:
   type: str
   help: "Python version to use in the development environment:"
   default: "3.12"
-  when: "{{ not _python_project_file_exists or framework == 'devenv'}}"
+  when: "{{ _python_project_file_exists != true or framework == 'devenv'}}"
 
 declarative_python_environment:
   type: bool
   help: "Do you want a project-specific declarative python environment that is automatically installed and activated? (recommended)"
   default: true
-  when: "{{ not _python_project_file_exists }}"
+  when: "{{ _python_project_file_exists != true }}"
 
 
 python_packages:
   type: str
   help: "Enter a comma- or space-separated list of required Python packages (e.g., requests, rich, typer){%- if python_package_manager != 'micromamba' and python_package_manager != 'pip' and python_package_manager != 'pixi' %}. If you want to install flash attention, do NOT add it here, but answer yes to the next question.{%- endif %}"
-  when: "{{ declarative_python_environment and not _python_project_file_exists}}"
+  when: "{{ declarative_python_environment == true and _python_project_file_exists != true }}"
   default: ""
 
 install_flash_attention:
   type: bool
   help: "Do you want to install flash attention?"
   default: false
-  when: "{{ declarative_python_environment and python_package_manager != 'micromamba' and python_package_manager != 'pixi' and cudaSupport }}"
+  when: "{{ declarative_python_environment == true and python_package_manager != 'micromamba' and python_package_manager != 'pixi' }}"
 
 cudaSupport:
   type: bool
   help: "Do you want to install CUDA support?"
   default: true
-  when: "{{ not install_flash_attention }}"
+  when: "{{ install_flash_attention != true }}"
 
 shell:
   type: str
@@ -92,7 +92,7 @@ absolute_paths:
   type: bool
   help: "Do you want to use absolute paths for the python environment? Not recommended if you plan on sharing your project."
   default: false
-  when: "{{ framework == 'fhs' and declarative_python_environment }}"
+  when: "{{ framework == 'fhs' and declarative_python_environment == true}}"
 
 stable:
   type: bool
