@@ -43,7 +43,7 @@ python_version:
 
 declarative_python_environment:
   type: bool
-  help: "Do you want a project-specific declarative python environment that is automatically installed and activated? (recommended)"
+  help: "Do you want to couple your {{ framework }} and {{ python_package_manager }} environments? (recommended)"
   default: true
   when: "{{ _python_project_file_exists != true }}"
 
