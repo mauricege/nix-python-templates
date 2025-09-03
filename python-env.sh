@@ -6,6 +6,7 @@ usage() {
     echo "Subcommands:"
     echo "  init [destination-directory]    Initialize a new project (defaults to current directory)"
     echo "  update [destination-directory]  Update an existing project (defaults to current directory)"
+    echo "  template <devenv|fhs> [destination-directory]  Create a new project using a predefined template"
     exit 1
 }
 
@@ -17,7 +18,6 @@ subcommand="$1"
 shift
 
 TEMPLATE_DIR="gh:mauricege/nix-python-templates"
-
 
 
 case "$subcommand" in
@@ -44,7 +44,7 @@ case "$subcommand" in
             if grep -q '^\[tool.uv' "$dst_path/pyproject.toml"; then
                 echo "Found [tool.uv] in pyproject.toml, using uv as package manager."
                 pythonPackageManager="uv"
-            elif grep -q '^\[tool.pixi' "$dst_path/pyproject.toml"; then
+                elif grep -q '^\[tool.pixi' "$dst_path/pyproject.toml"; then
                 echo "Found [tool.pixi] in pyproject.toml, using pixi as package manager."
                 pythonPackageManager="pixi"
             else
@@ -103,7 +103,7 @@ case "$subcommand" in
         else
             dst_path="$PWD"
         fi
-
+        
         mkdir -p "$dst_path"
         
         copier_args=("$@")
@@ -119,7 +119,7 @@ framework: devenv
 i_know_what_i_am_doing: false
 install_flash_attention: false
 interface: flake
-project_name: "$(basename "$dst_path")-$template_name"
+project_name: "$(basename "$dst_path")"
 python_package_manager: uv
 python_packages: ''
 python_version: '3.12'
@@ -133,7 +133,7 @@ cudaSupport: true
 declarative_python_environment: false
 framework: fhs
 i_know_what_i_am_doing: false
-project_name: "$(basename "$dst_path")-$template_name"
+project_name: "$(basename "$dst_path")"
 python_package_manager: uv
 python_version: '3.12'
 shell: zsh

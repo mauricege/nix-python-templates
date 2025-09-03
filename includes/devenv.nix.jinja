@@ -91,7 +91,9 @@ in {
       libraries = with pkgs; [
         zlib
       ];
+      {%- if declarative_python_environment %}
       venv.enable = true;
+      {%- endif %}and framework != 'devenv'
       {%- if python_package_manager == 'uv' %}
       uv = {
         enable = true;
