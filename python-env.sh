@@ -6,7 +6,7 @@ usage() {
     echo "Subcommands:"
     echo "  init [destination-directory]    Initialize a new project (defaults to current directory)"
     echo "  update [destination-directory]  Update an existing project (defaults to current directory)"
-    echo "  template <devenv|fhs> [destination-directory]  Create a new project using a predefined template"
+    echo "  template <devenv|unpyatched> [destination-directory]  Create a new project using a predefined template"
     exit 1
 }
 
@@ -65,15 +65,19 @@ case "$subcommand" in
         fi
         
         if [[ $files == *"environment.yml"* ]]; then
-            echo "Found environment.yml, using micromamba as package manager."
-            pythonPackageManager="micromamba"
+            echo "Found environment.yml, using pixi as package manager and importing environment.yml."
+            pythonPackageManager="pixi"
             pythonProjectFileExists=true
         fi
-        
+
+        if [[ -f "/run/current-system/sw/share/nix-ld/lib/ld.so" ]]; then
+            unpyatchBackendDefault="nix-ld"
+        fi
+        unpyatchBackendDefault=''${unpyatchBackendDefault:-"fhs"}
         pythonPackageManager=''${pythonPackageManager:-"uv"}
         pythonProjectFileExists=''${pythonProjectFileExists:-false}
         
-        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
+        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_unpyatch_backend_default=$unpyatchBackendDefault" --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
     ;;
     update)
         if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
@@ -92,8 +96,8 @@ case "$subcommand" in
         shift
         
         # Only allow 'devenv' or 'FHS'
-        if [[ "$template_name" != "devenv" && "$template_name" != "fhs" ]]; then
-            echo "Error: template_name must be 'devenv' or 'fhs'"
+        if [[ "$template_name" != "devenv" && "$template_name" != "unpyatched" ]]; then
+            echo "Error: template_name must be 'devenv' or 'unpyatched'"
             exit 1
         fi
         
@@ -128,15 +132,10 @@ EOF
         else
             cat > "$answers_file" <<EOF
 _src_path: $dst_path
-codeserver: true
-cudaSupport: true
-declarative_python_environment: false
-framework: fhs
 i_know_what_i_am_doing: false
 project_name: "$(basename "$dst_path")"
 python_package_manager: uv
-python_version: '3.12'
-shell: zsh
+unpyatched_backend: nix-ld
 stable: true
 EOF
         fi

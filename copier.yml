@@ -9,8 +9,6 @@ python_package_manager:
   choices:
     "uv - declarative + reproducible, can also function as pip replacement": uv
     "pixi - declarative + reproducible, multi-language + multi-env": pixi
-    "micromamba - conda drop-in replacement, multi-language + multi-env": micromamba
-    "pip": pip
   default: "{{ _python_package_manager_default or 'uv' }}"
 
 framework:
@@ -20,11 +18,11 @@ framework:
     {% if python_package_manager == 'uv' or python_package_manager == 'pip' %}
     devenv (recommended): devenv
     {% endif %}
-    {% if python_package_manager == 'micromamba' or python_package_manager == 'pixi' or python_package_manager == 'uv' %}
-    fhs: fhs
+    {% if python_package_manager == 'pixi' or python_package_manager == 'uv' %}
+    unpyatched (make python "just work"): unpyatched
     {% endif %}
-  default: "{% if python_package_manager == 'uv' or python_package_manager == 'pip' %}devenv{% else %}fhs{% endif %}"
-  when: python_package_manager == 'uv'
+  default: "{% if python_package_manager == 'uv' or python_package_manager == 'pip' %}devenv{% else %}unpyatched{% endif %}"
+  when: "{{python_package_manager == 'uv' }}"
 
 interface:
   type: str
@@ -35,24 +33,26 @@ interface:
   default: flake
   when: "{{ framework == 'devenv' }}"
 
+unpyatched_backend:
+  type: str
+  help: "Choose the backend for unpyatched:"
+  choices:
+    fhs: fhs
+    nix-ld - needs to be installed on your NixOS system: nix-ld
+  default: "{{ _unpyatched_backend_default or 'fhs' }}"
+  when: "{{ framework == 'unpyatched' }}"
+
 python_version:
   type: str
   help: "Python version to use in the development environment:"
   default: "3.12"
-  when: "{{ _python_project_file_exists != true or framework == 'devenv'}}"
+  when: "{{ _python_project_file_exists != true and framework == 'devenv'}}"
 
 declarative_python_environment:
   type: bool
   help: "Do you want to couple your {{ framework }} and {{ python_package_manager }} environments? (recommended)"
-  default: true
-  when: "{{ _python_project_file_exists != true }}"
-
-
-python_packages:
-  type: str
-  help: "Enter a comma- or space-separated list of required Python packages (e.g., requests, rich, typer){%- if python_package_manager != 'micromamba' and python_package_manager != 'pip' and python_package_manager != 'pixi' %}. If you want to install flash attention, do NOT add it here, but answer yes to the next question.{%- endif %}"
-  when: "{{ declarative_python_environment == true and _python_project_file_exists != true }}"
-  default: ""
+  default: "{{ framework == 'devenv'}}"
+  when: false
 
 install_flash_attention:
   type: bool
@@ -63,8 +63,8 @@ install_flash_attention:
 cudaSupport:
   type: bool
   help: "Do you want to install CUDA support?"
-  default: true
-  when: "{{ install_flash_attention != true }}"
+  default: "{{ install_flash_attention == true }}"
+  when: "{{ install_flash_attention != true and python_package_manager != 'micromamba' and python_package_manager != 'pixi' }}"
 
 shell:
   type: str
@@ -90,13 +90,13 @@ codeserver:
 
 absolute_paths:
   type: bool
-  help: "Do you want to use absolute paths for the python environment? Not recommended if you plan on sharing your project."
+  help: "Do you want to decouple your environment from the project path? (not recommended)"
   default: false
   when: "{{ framework == 'fhs' and declarative_python_environment == true}}"
 
 stable:
   type: bool
-  help: "Do you want to use a tested version of the environment? This will use a locked version of nixpkgs and other dependencies."
+  help: "Do you want to use a tested version of the environment?"
   default: true
   when: false
 
@@ -112,6 +112,7 @@ _skip_if_exists:
   - pyproject.toml
   - environment.yml
   - requirements.txt
+  - pixi.toml
 
 _subdirectory: templates/{{ framework }}
 
@@ -146,6 +147,18 @@ _message_after_copy: |
     {% if not i_know_what_i_am_doing %}
     4. Check out the _README.md file for more information on how to use the environment.
     {%- endif %}
+    {% elif framework == 'unpyatched' %}
+    2. Allow direnv to load your project environment
+
+       $ direnv allow
+    
+    3. Use {{ python_package_manager }} to create projects, environments and install your python packages, e.g.,
+
+       $ {{ python_package_manager }} init
+       $ {{ python_package_manager }} add numpy pandas
+    {% if not i_know_what_i_am_doing %}
+    4. Check out the _README.md file for more information on how to use the environment.
+    {%- endif %}
     {%- endif %}
 
 _message_after_update: |
@@ -175,6 +188,6 @@ _tasks:
       nix flake update
       popd
       {%- endif %}
-      {%- elif framework == 'fhs' %}
+      {%- elif framework == 'fhs' or framework == 'unpyatched' %}
       git add flake.nix {% if stable %}flake.lock{%- endif %}
       {%- endif %}

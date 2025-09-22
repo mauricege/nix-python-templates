@@ -28,12 +28,14 @@
             devenv
             copier
             self'.packages.python-env
+            pixi
+            uv
           ];
         };
         packages = rec {
           python-env = pkgs.writeShellApplication {
             name = "python-env";
-            runtimeInputs = [pkgs.copier pkgs.git];
+            runtimeInputs = with pkgs; [copier git pixi uv];
             text = builtins.readFile "${self}/python-env.sh";
           };
           default = python-env;
