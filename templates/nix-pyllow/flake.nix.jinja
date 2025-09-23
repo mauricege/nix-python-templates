@@ -1,11 +1,11 @@
 {
-  description = "Example flake with unpyatched module";
+  description = "Devshell with nix-pyllow - make Python **just work** on NixOS";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
     devshell.url = "github:numtide/devshell";
-    unpyatched.url = "github:mauricege/unpyatched";
+    pyllow.url = "github:mauricege/nix-pyllow";
   };
 
   outputs = inputs @ {
@@ -13,13 +13,13 @@
     nixpkgs,
     flake-parts,
     devshell,
-    unpyatched,
+    pyllow,
     ...
   }:
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
         inputs.devshell.flakeModule
-        inputs.unpyatched.flakeModules.default
+        inputs.pyllow.flakeModules.default
       ];
 
       systems = [
@@ -42,18 +42,19 @@
             allowUnfree = true;
           };
         };
-        unpyatched = {
-          name = "{{ project_name }}";
-          enable = true;
-          backend = "{{ unpyatched_backend }}"; # or "nix-ld"
-        };
+        
         devshells.default = {
+          name = "{{ project_name }}";
           packages = with pkgs; [
             {{ python_package_manager }}
           ];
           env = [
             { name = "MY_ENV"; value = "My Env"; }
           ];
+          unpyatched = {
+            enable = true;
+            backend = "{{ unpyatched_backend }}"; # or "nix-ld"
+          };
         };
       };
     };

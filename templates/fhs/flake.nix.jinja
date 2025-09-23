@@ -97,6 +97,28 @@
           {{ project_name }} = self.packages.${system}.default.env.overrideAttrs (old: {
             name = "{{ project_name }}";
           });
+          develop = pkgs.mkShell {
+            name = "{{ project_name }}-develop";
+            buildInputs = [ 
+              self.packages.${system}.default 
+              {% if python_package_manager == 'uv' %}
+              uv
+              {%- elif python_package_manager == 'pixi' %}
+              pixi
+              {%- elif python_package_manager == 'micromamba' %}
+              pkgs.micromamba
+              {%- endif %}
+              pkgs.git
+            ];
+            shellHook = ''
+              {%- if cudaSupport %}
+                export CUDA_PATH="${pkgs.cudatoolkit}"
+              {%- endif %}
+              echo "Entering development shell for {{ project_name }}."
+              echo "To start a FHS-compatible environment, run: fhs"
+
+            '';
+          };
           default = {{ project_name }};
         };
         packages = rec {
