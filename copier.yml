@@ -40,7 +40,7 @@ pyllow_backend:
     fhs: fhs
     nix-ld - needs to be installed on your NixOS system: nix-ld
   default: "{{ _pyllow_backend_default or 'fhs' }}"
-  when: "{{ framework == 'pyllow' }}"
+  when: "{{ framework == 'pyllow' and _pyllow_backend_default is not defined }}"
 
 python_version:
   type: str
