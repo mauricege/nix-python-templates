@@ -1,0 +1,82 @@
+{% extends pathjoin("includes", "_README.md.jinja") %}
+
+{% block description %}
+This folder contains a development environment that makes use of [nix-pyllow](https://github.com/mauricege/nix-pyllow) to make python **just work**.
+{% endblock %}
+
+{% block features %}
+- Get's nix (mostly) out of your way
+- {%- if python_package_manager == 'uv' %}Fast{% endif %} Python dependency management via `{{ python_package_manager }}`{%- if python_package_manager == 'uv' or python_package_manager == 'pixi' %} and `pyproject.toml`/`{{ python_package_manager }}.lock`{% endif %}
+- System packages can be installed by adding them to `devshells.default.packages` in `flake.nix` – you can reference (devshell's documentation)(https://numtide.github.io/devshell/modules_schema.html) for a full list of options.
+{% endblock %}
+
+{% block getting_started %}
+1. **Install [Nix](https://nixos.org/download.html)**
+2. Enter the shell by running (from this directory):
+
+    ```sh
+    nix develop
+    ```
+
+    You can also activate the shell from another directory by running:
+
+    ```sh
+    nix develop {{ _copier_conf.dst_path.as_posix() }}
+    ```
+
+If you want to manage multiple python environments, consult your package manager's ({{ python_package_manager }}) documentation. You will always need to activate the nix environment first, then you can use the package manager to create and activate virtual environments.
+{% endblock %}
+
+{% block extending_environment %}
+### Add System Packages
+
+Edit `flake.nix` and add packages to the `devshells.default.packages` list inside the `perSystem` block::
+
+```nix
+  ...
+  devshells.default = {
+      name = "{{ project_name }}";
+      packages = with pkgs; [
+        {{ python_package_manager }}
+        # add packages here
+      ];
+      env = [
+        { name = "MY_ENV"; value = "My Env"; }
+      ];
+      pyllow = {
+        enable = true;
+        backend = "{{ pyllow_backend }}"; # or "nix-ld"
+      };
+    };
+        ...
+```
+
+You can use [NixOS search](https://search.nixos.org/packages) to find packages (or the CLI `nix-search`). Just copy the package name and add it to the `packages` list.
+{% endblock %}
+
+{% block reusing_environment %}
+You can reuse this environment from any directory by running:
+
+```sh
+    nix develop {{ _copier_conf.dst_path.as_posix() }}
+```
+
+If you want to do this from a script, you can use the shebang line:
+
+```sh
+    #!/usr/bin/env -S nix develop {{ _copier_conf.dst_path.as_posix() }}# -c bash
+```
+
+See also the examples for [slurm jobs](gpujob.sh) and [scripts](script.sh) in this directory.
+{% endblock %}
+{% block resources %}
+- [unpyatched](https://github.com/mauricege/unpyatched)
+{%- if python_package_manager == 'uv' %}
+- [uv documentation](https://docs.astral.sh/uv/)
+{%- elif python_package_manager == 'pixi' %}
+- [pixi documentation](https://pixi.sh/)
+{%- endif %}
+{%- if python_package_manager == 'uv' %}
+- [flash-attn via uv](https://docs.astral.sh/uv/concepts/projects/config/#build-isolation)
+{%- endif %}
+{% endblock %}
