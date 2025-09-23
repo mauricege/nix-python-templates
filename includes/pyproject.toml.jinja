@@ -5,31 +5,26 @@ version = "0.0.1"
 description = "{{ project_description }}"
 requires-python = ">={{ python_version }}, <{{ next_major_version(python_version) }}"
 dependencies = [
-    {%- if python_package_manager != 'pixi' %}
+    {%- if install_flash_attention %}
+    "torch",
+    "flash-attn",
+    {%- endif %}
     {%- for pkg in python_packages.replace(',', ' ').split() %}
     "{{ pkg }}",
     {%- endfor %}
-    {%- endif %}
 ]
-
 {% if python_package_manager == 'uv' %}
 [tool.uv]
 dev-dependencies = ["ruff"]
-{%- if install_flash_attention %}
-no-build-isolation-package = ["flash-attn"]
+{% if install_flash_attention %}
+[tool.uv.extra-build-dependencies]
+flash-attn = [{ requirement = "torch", match-runtime = true }]
+
+[tool.uv.extra-build-variables]
+flash-attn = { FLASH_ATTENTION_SKIP_CUDA_BUILD = "TRUE" }
+{%- endif %}
 {% endif %}
-
-{%- if install_flash_attention %}
-[[tool.uv.dependency-metadata]]
-name = "flash-attn"
-requires-dist = ["torch", "einops"]
-{%- endif %}
-{%- endif %}
-
-[project.optional-dependencies]
-{%- if install_flash_attention %}
-flash_attention_build = ["torch~=2.6.0", "setuptools", "packaging", "psutil", "numpy"]
-flash_attention_compile = ["flash-attn~=2.7.4"]
+{% if python_package_manager == 'micromamba' %}
 {%- endif %}
 {% if python_package_manager == 'pixi' %}
 [tool.pixi.workspace]
@@ -40,7 +35,6 @@ platforms = ["linux-64"]
 {% if cudaSupport %}
 cuda = "12.0"
 {%- endif %}
-
 [tool.pixi.dependencies]
 {%- set py_parts = python_version.split('.') %}
 python = "{% if py_parts|length == 2 %}{{ python_version }}.*{% else %}{{ python_version }}{% endif %}"

@@ -26,6 +26,19 @@
     ```
 {% if python_package_manager == 'pixi' %}
     Dependencies added under the `[project]` section will be installed from pypi via pixi's uv integration. If you want to install from conda channels, add the dependencies under `[tool.pixi.dependencies]`. 
+    
+    You might need cuda as a system requirement for some packages, which you can add here:
+
+    ```toml
+    [tool.pixi.system-requirements]
+    cuda = "12.0"
+    ```
+    conda-channels can be configured in the `[tool.pixi.workspace]` section:
+
+    ```toml
+    [tool.pixi.workspace]
+    channels = ["conda-forge", "nvidia"]
+    ```
 {%- endif %}
 2. Use `{{ python_package_manager }}` to resolve and lock dependencies:
 
@@ -54,6 +67,13 @@
     ```sh
     pixi add --pypi <package>
     ```
+
+### Conda Compatibility
+`pixi` is compatible with conda environments. If you have an existing conda environment defined via an `environment.yml` file, you can convert it to a `pixi`project by running:
+
+```sh
+pixi init --import environment.yml
+```
 {% endif%}
 {% if python_package_manager == 'uv' %}
 `uv` also supports a pip-like interface for managing dependencies via the `uv pip` command. You can use it to install packages directly from PyPI or other sources:
@@ -94,7 +114,59 @@ Steps 1 and 2 are not necessary when, as a default environment is created and ac
 ## Reusing the environment
 {% block reusing_environment %}{% endblock %}
 ## Installing flash-attention
-{% block installing_flash_attention %}{% endblock %}
+{%- if python_package_manager == 'uv' %}
+{%- if install_flash_attention %}
+flash-attention should already be installed in your environment via {{ python_package_manager }}! If it is not, you can follow the instructions below to install it manually.
+{%- endif%}
+
+1. **Add dependencies to `pyproject.toml`**  
+    Your `pyproject.toml` should include torch and flash-attn as dependencies and some additional uv settings:
+
+    ```toml
+    [project]
+    dependencies = [
+        "torch",
+        "flash-attn",
+    ]
+
+    [tool.uv.extra-build-dependencies]
+    flash-attn = [{ requirement = "torch", match-runtime = true }]
+
+    [tool.uv.extra-build-variables]
+    flash-attn = { FLASH_ATTENTION_SKIP_CUDA_BUILD = "TRUE" }
+    ```
+
+2. **Run uv sync**
+    You should just be able to uv sync (or run):
+
+    ```sh
+    uv sync
+    ```
+
+{%- elif python_package_manager == 'pip' %}
+Install torch and then flash-attn without build isolation:
+
+```sh
+    pip install torch
+    pip install flash-attn --no-build-isolation
+```
+
+{%- elif python_package_manager == 'poetry' %}
+{%- elif python_package_manager == 'pixi' %}
+Just run:
+
+```sh
+    pixi add flash-attn
+```
+
+{%- elif python_package_manager == 'micromamba' %}
+Just run:
+
+```sh
+    micromamba install flash-attn -c conda-forge
+```
+
+{%- endif%}
 ## Resources
 {% block resources %}{% endblock %}
 --------------------------------------------------------------------------------------

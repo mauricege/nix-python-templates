@@ -5,9 +5,9 @@ channels:
   - nvidia
 dependencies:
   - python={{ python_version }}
+  {%- if install_flash_attention %}
+  - flash-attn
+  {%- endif %}
   {%- for pkg in python_packages.replace(',', ' ').split() %}
   - {{ pkg }}
   {%- endfor %}
-  {%- if install_flash_attention and python_package_manager == 'pixi' %}
-  - flash-attn
-  {%- endif %}
