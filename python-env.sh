@@ -6,7 +6,7 @@ usage() {
     echo "Subcommands:"
     echo "  init [destination-directory]    Initialize a new project (defaults to current directory)"
     echo "  update [destination-directory]  Update an existing project (defaults to current directory)"
-    echo "  template <devenv|unpyatched> [destination-directory]  Create a new project using a predefined template"
+    echo "  template <devenv|pyllow> [destination-directory]  Create a new project using a predefined template"
     exit 1
 }
 
@@ -71,13 +71,13 @@ case "$subcommand" in
         fi
 
         if [[ -f "/run/current-system/sw/share/nix-ld/lib/ld.so" ]]; then
-            unpyatchBackendDefault="nix-ld"
+            pyllowBackendDefault="nix-ld"
         fi
-        unpyatchBackendDefault=''${unpyatchBackendDefault:-"fhs"}
+        pyllowBackendDefault=''${pyllowBackendDefault:-"fhs"}
         pythonPackageManager=''${pythonPackageManager:-"uv"}
         pythonProjectFileExists=''${pythonProjectFileExists:-false}
         
-        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_unpyatch_backend_default=$unpyatchBackendDefault" --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
+        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_pyllow_backend_default=$pyllowBackendDefault" --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
     ;;
     update)
         if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then
@@ -96,8 +96,8 @@ case "$subcommand" in
         shift
         
         # Only allow 'devenv' or 'FHS'
-        if [[ "$template_name" != "devenv" && "$template_name" != "unpyatched" ]]; then
-            echo "Error: template_name must be 'devenv' or 'unpyatched'"
+        if [[ "$template_name" != "devenv" && "$template_name" != "pyllow" ]]; then
+            echo "Error: template_name must be 'devenv' or 'pyllow'"
             exit 1
         fi
         
@@ -135,7 +135,7 @@ _src_path: $dst_path
 i_know_what_i_am_doing: false
 project_name: "$(basename "$dst_path")"
 python_package_manager: uv
-unpyatched_backend: nix-ld
+pyllow_backend: nix-ld
 stable: true
 EOF
         fi
