@@ -1,0 +1,10 @@
+#!/usr/bin/env -S nix develop {{ _copier_conf.dst_path.as_posix() }}# -c bash
+#SBATCH --time=00:10:00
+#SBATCH --name={{ project_name }}_gpujob
+#SBATCH --partition=# Adapt this to your needs
+#SBATCH --gpus=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=5G
+#SBATCH --output=./%x_%A.out
+
+{{ python_package_manager }} --version
