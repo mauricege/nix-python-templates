@@ -22,17 +22,13 @@
     export UV_CACHE_DIR
   '';
   {%- endif %}
-  # Selects the CUDA toolkit version 12.4 from the available CUDA packages in Nixpkgs.
+  # Selects the CUDA toolkit version 12.8 from the available CUDA packages in Nixpkgs.
   # The `cudaPackages` attribute provides access to the full suite of CUDA tools and libraries for this version.
   # To use a different CUDA version, replace `cudaPackages_12_3` with another version (e.g., `cudaPackages_11_8`).
   # Individual components (such as `cuda`, `cudatoolkit`, `cudnn`, etc.) can be accessed as attributes of `cudaPackages`
   # and added to the `packages` list in your devenv shell as needed.
   # Example: `cudaPackages.cudatoolkit`, `cudaPackages.cudnn`, etc.
-  {%- if install_flash_attention or cudaSupport %}
-  cudaPackages = pkgs.cudaPackages_12_4;
-  {%- else %}
-  # cudaPackages = pkgs.cudaPackages_12_4;
-  {%- endif %}
+  # cudaPackages = pkgs.cudaPackages_12_8;
 in {
   name = "{{ project_name | replace('_', '-')}}";
   # https://devenv.sh/basics/
@@ -78,9 +74,7 @@ in {
 
   # https://devenv.sh/packages/
   packages = with pkgs; [
-    {%- if install_flash_attention or cudaSupport %}
-    cudaPackages.cuda_nvcc
-    {%- endif %}
+
   ];
 
   languages = {
@@ -101,9 +95,6 @@ in {
       {%- if declarative_python_environment %}
         sync = {
           enable = true;
-        {%- if install_flash_attention %}
-          extras = [ "flash_attention_build" ];
-        {%- endif %}
         };
       {%- endif %}
       };
@@ -145,13 +136,6 @@ in {
       before = ["devenv:python:uv"];
     };
   {%- endif%}
-  {%- if install_flash_attention %}
-    "devenv:python:install-flash-attn" = {
-      description = "Install Flash Attention";
-      exec = "uv sync --extra flash_attention_build --extra flash_attention_compile";
-      after = ["devenv:python:uv"];
-    };
-  {%- endif %}
   };
 
   # We have podman installed, so we need to adapt the container copy args to use the podman socket.

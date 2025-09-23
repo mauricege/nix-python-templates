@@ -19,9 +19,9 @@ framework:
     devenv (recommended): devenv
     {% endif %}
     {% if python_package_manager == 'pixi' or python_package_manager == 'uv' %}
-    unpyatched (make python "just work"): unpyatched
+    nix-pyllow (make python "just work"): pyllow
     {% endif %}
-  default: "{% if python_package_manager == 'uv' or python_package_manager == 'pip' %}devenv{% else %}unpyatched{% endif %}"
+  default: "{% if python_package_manager == 'uv' or python_package_manager == 'pip' %}devenv{% else %}pyllow{% endif %}"
   when: "{{python_package_manager == 'uv' }}"
 
 interface:
@@ -33,15 +33,15 @@ interface:
   default: flake
   when: "{{ framework == 'devenv' }}"
 
-unpyatched_backend:
+pyllow_backend:
   type: str
-  help: "Choose the backend for unpyatched:"
+  help: "Choose the backend for pyllow:"
   choices:
     fhs: fhs
     nix-ld - needs to be installed on your NixOS system: nix-ld
-  default: "{{ _unpyatched_backend_default or 'fhs' }}"
-  when: "{{ framework == 'unpyatched' }}"
-
+  default: "{{ _pyllow_backend_default or 'fhs' }}"
+  when: "{{ framework == 'pyllow' }}"
+  
 python_version:
   type: str
   help: "Python version to use in the development environment:"
@@ -52,6 +52,12 @@ declarative_python_environment:
   type: bool
   help: "Do you want to couple your {{ framework }} and {{ python_package_manager }} environments? (recommended)"
   default: "{{ framework == 'devenv'}}"
+  when: "{{ framework == 'fhs'}}"
+
+python_packages:
+  type: str
+  help: "Additional python packages to install (space-separated):"
+  default: ""
   when: false
 
 install_flash_attention:
@@ -63,8 +69,8 @@ install_flash_attention:
 cudaSupport:
   type: bool
   help: "Do you want to install CUDA support?"
-  default: "{{ install_flash_attention == true }}"
-  when: "{{ install_flash_attention != true and python_package_manager != 'micromamba' and python_package_manager != 'pixi' }}"
+  default: false
+  when: "{{ declarative_python_environment and python_package_manager == 'pixi' }}"
 
 shell:
   type: str
@@ -147,7 +153,7 @@ _message_after_copy: |
     {% if not i_know_what_i_am_doing %}
     4. Check out the _README.md file for more information on how to use the environment.
     {%- endif %}
-    {% elif framework == 'unpyatched' %}
+    {% elif framework == 'pyllow' %}
     2. Allow direnv to load your project environment
 
        $ direnv allow
@@ -188,6 +194,6 @@ _tasks:
       nix flake update
       popd
       {%- endif %}
-      {%- elif framework == 'fhs' or framework == 'unpyatched' %}
+      {%- elif framework == 'fhs' or framework == 'pyllow' %}
       git add flake.nix {% if stable %}flake.lock{%- endif %}
       {%- endif %}
