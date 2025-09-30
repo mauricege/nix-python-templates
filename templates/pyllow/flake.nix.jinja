@@ -4,7 +4,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    devshell.url = "github:numtide/devshell";
     pyllow.url = "github:mauricege/nix-pyllow";
   };
 
@@ -12,13 +11,11 @@
     self,
     nixpkgs,
     flake-parts,
-    devshell,
     pyllow,
     ...
   }:
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
-        inputs.devshell.flakeModule
         inputs.pyllow.flakeModules.default
       ];
 
@@ -42,18 +39,14 @@
             allowUnfree = true;
           };
         };
-        
-        devshells.default = {
-          name = "{{ project_name }}";
-          packages = with pkgs; [
-            {{ python_package_manager }}
-          ];
-          env = [
-            { name = "MY_ENV"; value = "My Env"; }
-          ];
-          pyllow = {
-            enable = true;
-            backend = "{{ pyllow_backend }}"; # or "nix-ld"
+        pyllow = {
+          backend = "{{ pyllow_backend }}"; # or "nix-ld"
+          shells.default = {
+            name = "{{ project_name }}";
+            packages = with pkgs; [
+              {{ python_package_manager }}
+            ];
+            env = { "MY_ENV"="My Env"; };
           };
         };
       };
