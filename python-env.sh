@@ -76,8 +76,9 @@ case "$subcommand" in
         pyllowBackendDefault=''${pyllowBackendDefault:-"fhs"}
         pythonPackageManager=''${pythonPackageManager:-"uv"}
         pythonProjectFileExists=''${pythonProjectFileExists:-false}
+        projectName=$(basename "$dst_path")
         
-        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_pyllow_backend_default=$pyllowBackendDefault" --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
+        copier copy "$TEMPLATE_DIR" "$dst_path" --trust --data "_project_name=$projectName" --data "_pyllow_backend_default=$pyllowBackendDefault" --data "_python_package_manager_default=$pythonPackageManager" --data "_python_project_file_exists=$pythonProjectFileExists" "${copier_args[@]}"
     ;;
     update)
         if [[ $# -gt 0 && ! "$1" =~ ^- ]]; then

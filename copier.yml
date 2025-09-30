@@ -1,7 +1,7 @@
 project_name:
   type: str
   help: "Name of the environment:"
-  default: "myenv"
+  default: "{{ _project_name or 'myenv' }}"
 
 python_package_manager:
   type: str
