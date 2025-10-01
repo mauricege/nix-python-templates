@@ -30,24 +30,21 @@ If you want to manage multiple python environments, consult your package manager
 {% block extending_environment %}
 ### Add System Packages
 
-Edit `flake.nix` and add packages to the `devshells.default.packages` list inside the `perSystem` block::
+Edit `flake.nix` and add packages to the `pyllow.shells.default.packages` list inside the `perSystem` block::
 
 ```nix
   ...
-  devshells.default = {
+  pyllow = {
+    backend = "{{ pyllow_backend }}"; # or "nix-ld"
+    shells.default = {
       name = "{{ project_name }}";
       packages = with pkgs; [
         {{ python_package_manager }}
         # add packages here
       ];
-      env = [
-        { name = "MY_ENV"; value = "My Env"; }
-      ];
-      pyllow = {
-        enable = true;
-        backend = "{{ pyllow_backend }}"; # or "nix-ld"
-      };
+      env = {"MY_ENV"="My Env"; }
     };
+  };
         ...
 ```
 

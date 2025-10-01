@@ -4,7 +4,6 @@
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
     flake-parts.url = "github:hercules-ci/flake-parts";
-    devshell.url = "github:numtide/devshell";
     pyllow.url = "github:mauricege/nix-pyllow";
   };
 
@@ -12,13 +11,11 @@
     self,
     nixpkgs,
     flake-parts,
-    devshell,
     pyllow,
     ...
   }:
     flake-parts.lib.mkFlake {inherit inputs;} {
       imports = [
-        inputs.devshell.flakeModule
         inputs.pyllow.flakeModules.default
       ];
 
@@ -35,25 +32,30 @@
         pkgs,
         system,
         ...
-      }: {
+      }: let
+        # Selects the CUDA toolkit version 12.8 from the available CUDA packages in Nixpkgs.
+        # The `cudaPackages` attribute provides access to the full suite of CUDA tools and libraries for this version.
+        # To use a different CUDA version, replace `cudaPackages_12_3` with another version (e.g., `cudaPackages_11_8`).
+        # Individual components (such as `cuda`, `cudatoolkit`, `cudnn`, etc.) can be accessed as attributes of `cudaPackages`
+        # and added to the `packages` list in your devenv shell as needed.
+        # Example: `cudaPackages.cudatoolkit`, `cudaPackages.cudnn`, etc.
+        cudaPackages = pkgs.cudaPackages_12_8;
+      in {
         _module.args.pkgs = import self.inputs.nixpkgs {
           inherit system;
           config = {
             allowUnfree = true;
           };
         };
-        
-        devshells.default = {
-          name = "{{ project_name }}";
-          packages = with pkgs; [
-            {{ python_package_manager }}
-          ];
-          env = [
-            { name = "MY_ENV"; value = "My Env"; }
-          ];
-          pyllow = {
-            enable = true;
-            backend = "{{ pyllow_backend }}"; # or "nix-ld"
+        pyllow = {
+          backend = "{{ pyllow_backend }}"; # or "nix-ld"
+          shells.default = {
+            name = "{{ project_name }}";
+            packages = with pkgs; [
+              {{ python_package_manager }}
+              # cudaPackages.cudatoolkit
+            ];
+            env = { "MY_ENV"="My Env"; };
           };
         };
       };

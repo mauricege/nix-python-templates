@@ -2,3 +2,5 @@
 _README.md
 gpujob.sh
 script.sh
+# Consumers of our repo do not care about copier templates
+.copier-answers.yml

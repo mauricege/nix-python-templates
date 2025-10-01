@@ -28,7 +28,7 @@
   # Individual components (such as `cuda`, `cudatoolkit`, `cudnn`, etc.) can be accessed as attributes of `cudaPackages`
   # and added to the `packages` list in your devenv shell as needed.
   # Example: `cudaPackages.cudatoolkit`, `cudaPackages.cudnn`, etc.
-  # cudaPackages = pkgs.cudaPackages_12_8;
+  cudaPackages = pkgs.cudaPackages_12_8;
 in {
   name = "{{ project_name | replace('_', '-')}}";
   # https://devenv.sh/basics/
@@ -74,7 +74,6 @@ in {
 
   # https://devenv.sh/packages/
   packages = with pkgs; [
-
   ];
 
   languages = {
