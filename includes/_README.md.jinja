@@ -131,17 +131,21 @@ flash-attention should already be installed in your environment via {{ python_pa
 
     [tool.uv.extra-build-dependencies]
     flash-attn = [{ requirement = "torch", match-runtime = true }]
-
-    [tool.uv.extra-build-variables]
-    flash-attn = { FLASH_ATTENTION_SKIP_CUDA_BUILD = "TRUE" }
     ```
+2. Add `cudatoolkit` to your environments nix packages. Make sure to match the cuda version of torch.
 
-2. **Run uv sync**
+3. **Run uv sync**
     You should just be able to uv sync (or run):
 
     ```sh
     uv sync
-    ```
+    ```#
+
+Alternatively, there are pre-built [wheels for flash-attn](https://github.com/mjun0812/flash-attention-prebuild-wheels). Look up the correct wheel for your torch, python and cuda versions and put it in the uv sources:
+```toml
+[tool.uv.sources]
+flash-attn = { url="https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.4.11/flash_attn-2.8.3+cu128torch2.8-cp312-cp312-linux_x86_64.whl" }
+```
 
 {%- elif python_package_manager == 'pip' %}
 Install torch and then flash-attn without build isolation:

@@ -32,7 +32,15 @@
         pkgs,
         system,
         ...
-      }: {
+      }: let
+        # Selects the CUDA toolkit version 12.8 from the available CUDA packages in Nixpkgs.
+        # The `cudaPackages` attribute provides access to the full suite of CUDA tools and libraries for this version.
+        # To use a different CUDA version, replace `cudaPackages_12_3` with another version (e.g., `cudaPackages_11_8`).
+        # Individual components (such as `cuda`, `cudatoolkit`, `cudnn`, etc.) can be accessed as attributes of `cudaPackages`
+        # and added to the `packages` list in your devenv shell as needed.
+        # Example: `cudaPackages.cudatoolkit`, `cudaPackages.cudnn`, etc.
+        cudaPackages = pkgs.cudaPackages_12_8;
+      in {
         _module.args.pkgs = import self.inputs.nixpkgs {
           inherit system;
           config = {
@@ -45,6 +53,7 @@
             name = "{{ project_name }}";
             packages = with pkgs; [
               {{ python_package_manager }}
+              # cudaPackages.cudatoolkit
             ];
             env = { "MY_ENV"="My Env"; };
           };
