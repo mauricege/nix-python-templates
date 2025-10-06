@@ -1,4 +1,4 @@
-#!/usr/bin/env -S nix develop {{ _copier_conf.dst_path.as_posix() }}# -c bash
+#!/usr/bin/env -S nix develop .# -c bash
 #SBATCH --time=00:10:00
 #SBATCH --name={{ project_name }}_gpujob
 #SBATCH --partition=# Adapt this to your needs
