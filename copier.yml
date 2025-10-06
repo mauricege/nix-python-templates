@@ -15,11 +15,11 @@ framework:
   type: str
   help: "Choose the framework for your develpment environment:"
   choices: |
-    {% if python_package_manager == 'uv' or python_package_manager == 'pip' %}
-    devenv (recommended): devenv
-    {% endif %}
     {% if python_package_manager == 'pixi' or python_package_manager == 'uv' %}
     nix-pyllow (make python "just work"): pyllow
+    {% endif %}
+    {% if python_package_manager == 'uv' or python_package_manager == 'pip' %}
+    devenv (feature-rich): devenv
     {% endif %}
   default: "{% if python_package_manager == 'uv' or python_package_manager == 'pip' %}devenv{% else %}pyllow{% endif %}"
   when: "{{ python_package_manager == 'uv' }}"
@@ -29,7 +29,7 @@ interface:
   help: "Do you want to use the devenv cli or a flake?"
   choices:
     cli: cli
-    flakes - use this on (HPC) clusters: flake
+    flakes - use this on HPC clusters: flake
   default: flake
   when: "{{ framework == 'devenv' }}"
 
