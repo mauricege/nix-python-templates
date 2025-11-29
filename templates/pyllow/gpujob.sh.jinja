@@ -1,6 +1,6 @@
-#!/usr/bin/env -S nix develop {{ _copier_conf.dst_path.as_posix() }}# -c bash
+#!/usr/bin/env -S nix develop .# -c bash
 #SBATCH --time=00:10:00
-#SBATCH --name={{ project_name }}_gpujob
+#SBATCH --job-name={{ project_name }}_gpujob
 #SBATCH --partition=# Adapt this to your needs
 #SBATCH --gpus=1
 #SBATCH --cpus-per-task=8

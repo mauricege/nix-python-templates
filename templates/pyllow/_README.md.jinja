@@ -7,7 +7,7 @@ This folder contains a development environment that makes use of [nix-pyllow](ht
 {% block features %}
 - Get's nix (mostly) out of your way
 - {%- if python_package_manager == 'uv' %}Fast{% endif %} Python dependency management via `{{ python_package_manager }}`{%- if python_package_manager == 'uv' or python_package_manager == 'pixi' %} and `pyproject.toml`/`{{ python_package_manager }}.lock`{% endif %}
-- System packages can be installed by adding them to `devshells.default.packages` in `flake.nix` – you can reference (devshell's documentation)(https://numtide.github.io/devshell/modules_schema.html) for a full list of options.
+- System packages can be installed by adding them to `devshells.default.packages` in `flake.nix`
 {% endblock %}
 
 {% block getting_started %}
@@ -55,7 +55,7 @@ You can use [NixOS search](https://search.nixos.org/packages) to find packages (
 You can reuse this environment from any directory by running:
 
 ```sh
-    nix develop {{ _copier_conf.dst_path.as_posix() }}
+    nix develop {{ _copier_conf.dst_path.as_posix() }}#
 ```
 
 If you want to do this from a script, you can use the shebang line:

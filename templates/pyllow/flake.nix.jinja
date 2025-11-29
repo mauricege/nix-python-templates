@@ -48,7 +48,7 @@
           };
         };
         pyllow = {
-          backend = "{{ pyllow_backend }}"; # or "nix-ld"
+          backend = "{{ pyllow_backend }}"; # "nix-ld" or "fhs"
           shells.default = {
             name = "{{ project_name }}";
             packages = with pkgs; [
